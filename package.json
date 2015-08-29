@@ -1,0 +1,27 @@
+{
+  "name": "quickscope",
+  "version": "0.0.0",
+  "description": "Quickly react to dependecy changes",
+  "scripts": {
+    "test": "./node_modules/jest-cli/bin/jest.js"
+  },
+  "bin": {
+    "quickscope": "./bin/quickscope.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:kirstein/quickscope.git"
+  },
+  "main": "./src/index",
+  "devDependencies": {
+    "jest-cli": "^0.5.0"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^1.1.1",
+    "chokidar": "^1.0.5",
+    "keymirror": "^0.1.1",
+    "lodash": "^3.10.1",
+    "precinct": "^2.5.1"
+  }
+}
