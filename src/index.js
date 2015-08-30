@@ -2,10 +2,19 @@
 
 const chokidar  = require('chokidar');
 const _         = require('lodash');
-const fs        = require('fs');
-const precinct  = require('precinct');
+const dTree     = require('dependency-tree');
+const path      = require('path');
 
-const targets  = require('./stores/target-store');
+const hub    = require('./event-hub');
+const Runner = require('./runner');
+
+const constants = {
+  file: require('./constants/file-constants')
+};
+
+// Initiating stores
+require('./stores/dependency-store')._registerEvents();
+require('./stores/watchers-store')._registerEvents();
 
 const DEFAULT_OPTS = {
   persistent: true,
@@ -13,36 +22,55 @@ const DEFAULT_OPTS = {
   followSymlinks: true
 };
 
-function isValidDependency (dep) {
-  return _.startsWith(dep, '.');
+function getTargetPath (cwd, target) {
+  return path.join(cwd, target);
 }
 
-function getDeps (target) {
-  let content = fs.readFileSync(target, 'utf8');
-  return _.filter(precinct(content), isValidDependency);
+function getDeps (cwd, target) {
+  let list = dTree.toList(target, cwd);
+  // Exclude myself from dependencies.
+  // We are already watch ourselves.
+  return _.without(list, getTargetPath(cwd, target));
 }
 
-function addTarget (target) {
-  targets.add(target, getDeps(target));
+function preparePayload (cwd, target) {
+  return {
+    path: getTargetPath(cwd, target),
+    deps: getDeps(cwd, target)
+  };
 }
 
-function changeTarget (target) {
-  targets.change(target, getDeps(target));
+function addTarget (cwd, target) {
+  let data = preparePayload(cwd, target);
+  hub.emit(constants.file.FILE_ADDED, data);
+}
+
+function changeTarget (cwd, target) {
+  let data = preparePayload(cwd, target);
+  hub.emit(constants.file.FILE_CHANGED, data);
 }
 
 function buildOpts (cwd, options) {
   return _.assign({}, DEFAULT_OPTS, {
-    cwd: process.cwd()
+    cwd: cwd
   }, options);
 }
 
-module.exports = function (glob, cwd, options) {
+module.exports = function (glob, cmd, cwd, options) {
+  cwd = cwd || process.cwd();
+
+  if (!cmd) {
+    throw new Error('Cmd not defined');
+  }
+
   const opts    = buildOpts(cwd, options);
   const watcher = chokidar.watch(glob, opts);
+  const runner  = new Runner(cmd, cwd, watcher);
 
-  watcher.on('add', addTarget);
-  watcher.on('change', changeTarget);
-  return watcher;
+  watcher.on('add', _.partial(addTarget, cwd));
+  watcher.on('change', _.partial(changeTarget, cwd));
+
+  return runner;
 };
 
 module.exports.DEFAULT_OPTS = DEFAULT_OPTS;
