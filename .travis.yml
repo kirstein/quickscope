@@ -1,1 +1,3 @@
-language: iojs
+language: node_js
+node_js:
+  - "iojs"
