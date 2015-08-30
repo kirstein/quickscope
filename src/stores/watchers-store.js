@@ -15,7 +15,6 @@ const constants = {
 const data = {};
 
 function buildWatcher (dependency) {
-  console.log(dependency.path);
   let watcher = chokidar.watch(dependency.path);
   watcher.on('change', function () {
     hub.emit(constants.watcher.DEPENDENCY_CHANGED, dependency);

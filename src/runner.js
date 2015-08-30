@@ -8,7 +8,8 @@ const constants = {
 };
 
 function buildCmd (cmd, targets) {
-  return (cmd + targets.join()).split(' ');
+  let built = cmd + ' ' + targets.join(' ');
+  return built.split(' ');
 }
 
 function mapTargets (targets) {
@@ -17,19 +18,10 @@ function mapTargets (targets) {
   });
 }
 
-function runCmd (cmd, cwd, cb) {
-  let spawn = cp.spawn(cmd[0], _.drop(cmd), {
-    cwd: cwd
-  });
-
-  spawn.stdout.setEncoding('utf8');
-  spawn.stderr.setEncoding('utf8');
-  spawn.stdout.on('data', function (data) {
-    cb(null, data);
-  });
-
-  spawn.stderr.on('data', function (data) {
-    cb(data, null);
+function runCmd (cmd, cwd) {
+   cp.spawn(cmd[0], _.drop(cmd), {
+    cwd: cwd,
+    stdio: 'inherit'
   });
 }
 
@@ -47,9 +39,7 @@ class Runner {
     let targets = mapTargets(dependency.targets);
     let cmd     = buildCmd(this.cmd, targets);
     console.log('running cmd:', cmd.join(' '));
-    runCmd(cmd, this.cwd, function (err, data) {
-      console.log(err || data);
-    });
+    runCmd(cmd, this.cwd);
   }
 }
 

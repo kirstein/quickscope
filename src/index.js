@@ -39,11 +39,13 @@ function preparePayload (cwd, target) {
 
 function addTarget (cwd, target) {
   let data = preparePayload(cwd, target);
+  console.log('file added: ', target);
   hub.emit(constants.file.FILE_ADDED, data);
 }
 
 function changeTarget (cwd, target) {
   let data = preparePayload(cwd, target);
+  console.log('file changed: ', target);
   hub.emit(constants.file.FILE_CHANGED, data);
 }
 
