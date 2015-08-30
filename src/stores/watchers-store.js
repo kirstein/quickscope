@@ -12,7 +12,7 @@ const constants = {
 // List of watchers according to their path
 //
 // path: { watcher: <chokidar>, dependency: <dependency> }
-const data = {};
+var data = {};
 
 function buildWatcher (dependency) {
   let watcher = chokidar.watch(dependency.path);
@@ -26,7 +26,7 @@ function addMultipleIfNeeded (deps) {
   _.each(deps, function (dependency) {
     let path = dependency.path;
     // That path is alreadya added.
-    if (data[path]) {
+    if (data[path] || !dependency.targets) {
       return;
     }
     data[path] = {
@@ -39,6 +39,10 @@ function addMultipleIfNeeded (deps) {
 
 exports.getWatchers = function () {
   return data;
+};
+
+exports.clear = function () {
+  data = {};
 };
 
 exports._registerEvents = function () {
