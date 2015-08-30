@@ -61,4 +61,37 @@ describe('dependency model', function() {
       assert.strictEqual(dep.targets.length, 1);
     });
   });
+
+  describe('#removeTarget', function() {
+
+    it('should remove targets from list', function() {
+      let dep    = new Dependency(__dirname);
+      let target = 'hello';
+      dep.addTarget(target);
+      dep.removeTarget(target);
+      assert(!dep.targets.length);
+    });
+
+    it('should return true if removed an element', function() {
+      let dep    = new Dependency(__dirname);
+      let target = 'hello';
+      dep.addTarget(target);
+      assert(dep.removeTarget(target));
+    });
+
+    it('should not remove element if its not in the list', function() {
+      let dep    = new Dependency(__dirname);
+      let target = 'hello';
+      dep.addTarget(target);
+      dep.removeTarget('wrong');
+      assert.strictEqual(dep.targets[0], target);
+    });
+
+    it('should return false if removing was not successful', function() {
+      let dep    = new Dependency(__dirname);
+      let target = 'hello';
+      dep.addTarget(target);
+      assert(!dep.removeTarget('wrong'));
+    });
+  });
 });

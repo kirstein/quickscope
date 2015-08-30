@@ -97,4 +97,29 @@ describe('placeholder', function() {
       assert.strictEqual(hub.emit.mock.calls[0][0], constants.watcher.DEPENDENCY_CHANGED);
     });
   });
+
+  describe('multiple dependency removing', function() {
+    beforeEach(function() {
+      store._registerEvents();
+      this.addDependency = hub.on.mock.calls[1][1];
+      this.removeDependency = hub.on.mock.calls[2][1];
+    });
+
+    it('should remove the path from watchers list', function() {
+      this.addDependency([ { path: 'xxx', targets: [ 'xx' ] }]);
+      this.removeDependency('xxx');
+      assert(!store.getWatchers().xxx);
+    });
+
+    it('should trigger close on watcher', function() {
+      let spy = jasmine.createSpy();
+      spyOn(chokidar, 'watch').andReturn({
+        on: function() {},
+        close: spy
+      });
+      this.addDependency([ { path: 'xxx', targets: [ 'xx' ] }]);
+      this.removeDependency('xxx');
+      assert(spy.wasCalled);
+    });
+  });
 });

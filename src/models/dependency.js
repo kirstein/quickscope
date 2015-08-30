@@ -17,6 +17,14 @@ class Dependency {
     }
   }
 
+  removeTarget(target) {
+    if (!this.hasTarget(target)) {
+      return false;
+    }
+    this.targets = _.without(this.targets, target);
+    return true;
+  }
+
   hasTarget(target) {
     return _.includes(this.targets, target);
   }

@@ -25,7 +25,7 @@ function buildWatcher (dependency) {
 function addMultipleIfNeeded (deps) {
   _.each(deps, function (dependency) {
     let path = dependency.path;
-    // That path is alreadya added.
+    // That path is already added.
     if (data[path] || !dependency.targets) {
       return;
     }
@@ -36,6 +36,11 @@ function addMultipleIfNeeded (deps) {
   });
 }
 
+function removeDependency (path) {
+  let dep = data[path];
+  dep.watcher.close();
+  delete data[path];
+}
 
 exports.getWatchers = function () {
   return data;
@@ -48,4 +53,5 @@ exports.clear = function () {
 exports._registerEvents = function () {
   hub.on(constants.deps.MULTIPLE_DEPENDENCY_ADDED, addMultipleIfNeeded);
   hub.on(constants.deps.MULTIPLE_DEPENDENCY_CHANGED, addMultipleIfNeeded);
+  hub.on(constants.deps.DEPENDENCY_REMOVED, removeDependency);
 };

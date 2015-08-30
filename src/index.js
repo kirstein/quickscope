@@ -49,6 +49,11 @@ function changeTarget (cwd, target) {
   hub.emit(constants.file.FILE_CHANGED, data);
 }
 
+function unlinkTarget (cwd, target) {
+  console.log('file removed: ', target);
+  hub.emit(constants.file.FILE_REMOVED, getTargetPath(cwd, target));
+}
+
 function buildOpts (cwd, options) {
   return _.assign({}, DEFAULT_OPTS, {
     cwd: cwd
@@ -68,6 +73,7 @@ module.exports = function (glob, cmd, cwd, options) {
 
   watcher.on('add', _.partial(addTarget, cwd));
   watcher.on('change', _.partial(changeTarget, cwd));
+  watcher.on('unlink', _.partial(unlinkTarget, cwd));
 
   return runner;
 };

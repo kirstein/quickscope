@@ -3,6 +3,7 @@
 exports.on = function () {};
 exports.watch = function () {
   return {
-    on: function() {}
+    on: function() {},
+    close: function () {}
   };
 };

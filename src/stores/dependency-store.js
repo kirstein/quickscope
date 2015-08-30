@@ -48,17 +48,31 @@ function validatePayload (fn) {
 }
 
 function addFile (payload) {
-  let path   = payload.path;
-  let deps   = payload.deps;
+  let path         = payload.path;
+  let deps         = payload.deps;
   let dependencies = buildDependencyList(deps, path);
   hub.emit(constants.deps.MULTIPLE_DEPENDENCY_ADDED, dependencies);
 }
 
 function changeFile (payload) {
-  let path   = payload.path;
-  let deps   = payload.deps;
+  let path = payload.path;
+  let deps = payload.deps;
   buildDependencyList(deps, path);
   hub.emit(constants.deps.MULTIPLE_DEPENDENCY_CHANGED);
+}
+
+function removeFile (path) {
+  let deps       = data.dependencies;
+  let hasRemoved = false;
+  _.each(deps, function(val, key) {
+    if (key === path || val.removeTarget(path)) {
+      hasRemoved = true;
+      delete deps[key];
+    }
+  });
+  if (hasRemoved) {
+    hub.emit(constants.deps.DEPENDENCY_REMOVED, path);
+  }
 }
 
 exports.getDependencies = function () {
@@ -72,4 +86,5 @@ exports.clear = function () {
 exports._registerEvents = function () {
   hub.on(constants.file.FILE_ADDED, validatePayload(addFile));
   hub.on(constants.file.FILE_CHANGED, validatePayload(changeFile));
+  hub.on(constants.file.FILE_REMOVED, validatePayload(removeFile));
 };
