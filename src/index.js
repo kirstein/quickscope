@@ -27,10 +27,7 @@ function getTargetPath (cwd, target) {
 }
 
 function getDeps (cwd, target) {
-  let list = dTree.toList(target, cwd);
-  // Exclude myself from dependencies.
-  // We are already watch ourselves.
-  return _.without(list, getTargetPath(cwd, target));
+  return dTree.toList(target, cwd);
 }
 
 function preparePayload (cwd, target) {
