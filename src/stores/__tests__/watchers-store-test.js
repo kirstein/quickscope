@@ -13,6 +13,16 @@ const constants = {
   watcher: require('../../constants/watcher-constants')
 };
 
+function onFirstCall (fn) {
+  let called = false;
+  return function () {
+    if (!called) {
+      fn.apply(this, arguments);
+      called = true;
+    }
+  };
+}
+
 describe('placeholder', function() {
   beforeEach(function() {
     hub.emit.mockClear();
@@ -80,9 +90,9 @@ describe('placeholder', function() {
 
     it('should watch for change event', function() {
       spyOn(chokidar, 'watch').andReturn({
-        on: function(evt) {
+        on: onFirstCall(function(evt) {
           assert.strictEqual(evt, 'change');
-        }
+        })
       });
       this.addDependency([ { path: 'xxx', targets: [ 'xx' ] }]);
     });
@@ -90,7 +100,7 @@ describe('placeholder', function() {
     it('should trigger dependency changed event if file changes', function() {
       let mockCb;
       spyOn(chokidar, 'watch').andReturn({
-        on: function(evt, cb) { mockCb = cb; }
+        on: onFirstCall(function(evt, cb) { mockCb = cb; })
       });
       this.addDependency([ { path: 'xxx', targets: [ 'xx' ] }]);
       mockCb();
