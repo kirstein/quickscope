@@ -12,12 +12,6 @@ function buildCmd (cmd, targets) {
   return built.split(' ');
 }
 
-function mapTargets (targets) {
-  return _.map(targets, function (target) {
-    return target.path;
-  });
-}
-
 function runCmd (cmd, cwd) {
    cp.spawn(cmd[0], _.drop(cmd), {
     cwd: cwd,
@@ -36,8 +30,7 @@ class Runner {
     if (!dependency.targets) {
       return;
     }
-    let targets = mapTargets(dependency.targets);
-    let cmd     = buildCmd(this.cmd, targets);
+    let cmd     = buildCmd(this.cmd, dependency.targets);
     console.log('running cmd:', cmd.join(' '));
     runCmd(cmd, this.cwd);
   }

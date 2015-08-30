@@ -4,7 +4,6 @@ const assert = require('assert');
 
 jest.dontMock('../dependency-store');
 jest.dontMock('../../models/dependency');
-jest.dontMock('../../models/target');
 jest.dontMock('lodash');
 
 const store     = require('../dependency-store');
@@ -24,12 +23,6 @@ describe('dependency-store', function() {
     assert(store);
   });
 
-  describe('#getTargets', function() {
-    it('should exists', function() {
-      assert(store.getTargets);
-    });
-  });
-
   describe('#getDependencies', function() {
     it('should exists', function() {
       assert(store.getDependencies);
@@ -41,16 +34,10 @@ describe('dependency-store', function() {
       assert(store.clear);
     });
 
-    it('should clear the dependencies', function() {
+    it('should clear dependencies', function() {
       let deps = store.getDependencies();
       store.clear();
       assert.notStrictEqual(deps, store.getDependencies());
-    });
-
-    it('should clear the targets', function() {
-      let targets = store.getTargets();
-      store.clear();
-      assert.notStrictEqual(targets, store.getTargets());
     });
   });
 
@@ -76,15 +63,6 @@ describe('dependency-store', function() {
       assert.throws(function() {
         this.addFile();
       });
-    });
-
-    it('should add file to targets list', function() {
-      this.addFile({
-        path: __dirname,
-        deps: [ 'one', 'two' ]
-      });
-      let targets = store.getTargets();
-      assert(targets[__dirname]);
     });
 
     it('should add deps to deps', function() {

@@ -3,7 +3,6 @@
 const _     = require('lodash');
 
 const hub        = require('../event-hub');
-const Target     = require('../models/target');
 const Dependency = require('../models/dependency');
 
 const constants  = {
@@ -25,7 +24,6 @@ const constants  = {
 // d - [ C ]
 // e - [ Y ]
 var data = {
-  targets: {},
   dependencies: {}
 };
 
@@ -52,29 +50,22 @@ function validatePayload (fn) {
 function addFile (payload) {
   let path   = payload.path;
   let deps   = payload.deps;
-  let target = data.targets[path] = new Target(path);
-  let dependencies = buildDependencyList(deps, target);
+  let dependencies = buildDependencyList(deps, path);
   hub.emit(constants.deps.MULTIPLE_DEPENDENCY_ADDED, dependencies);
 }
 
 function changeFile (payload) {
   let path   = payload.path;
   let deps   = payload.deps;
-  let target = data.targets[path];
-  buildDependencyList(deps, target);
+  buildDependencyList(deps, path);
   hub.emit(constants.deps.MULTIPLE_DEPENDENCY_CHANGED);
 }
-
-exports.getTargets = function () {
-  return data.targets;
-};
 
 exports.getDependencies = function () {
   return data.dependencies;
 };
 
 exports.clear = function () {
-  data.targets      = {};
   data.dependencies = {};
 };
 

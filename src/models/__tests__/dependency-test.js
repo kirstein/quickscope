@@ -6,7 +6,6 @@ jest.dontMock('../dependency');
 jest.dontMock('lodash');
 
 const Dependency = require('../dependency');
-const Target     = require('../target');
 
 describe('dependency model', function() {
   it('should exist', function() {
@@ -34,13 +33,13 @@ describe('dependency model', function() {
   describe('#hasTarget', function() {
     it('should return false if no targets', function() {
       let dep    = new Dependency(__dirname);
-      let target = new Target();
+      let target = 'hello';
       assert.strictEqual(dep.hasTarget(target), false);
     });
 
     it('should return true if target exists', function() {
       let dep    = new Dependency(__dirname);
-      let target = new Target();
+      let target = 'hello';
       dep.addTarget(target);
       assert.strictEqual(dep.hasTarget(target), true);
     });
@@ -49,14 +48,14 @@ describe('dependency model', function() {
   describe('#addTarget', function() {
     it('should add targets to list', function() {
       let dep    = new Dependency(__dirname);
-      let target = new Target();
+      let target = 'hello';
       dep.addTarget(target);
       assert.strictEqual(dep.targets[0], target);
     });
 
     it('should not add duplicate targets', function() {
       let dep    = new Dependency(__dirname);
-      let target = new Target();
+      let target = 'hello';
       dep.addTarget(target);
       dep.addTarget(target);
       assert.strictEqual(dep.targets.length, 1);

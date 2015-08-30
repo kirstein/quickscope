@@ -63,7 +63,7 @@ describe('Runner', function() {
       });
       let runner = new Runner();
       let path   = 'path xxx';
-      runner.triggerCmd({path: path, targets: [ { path: 'xxx '}]});
+      runner.triggerCmd({path: path, targets: [ 'xxx ' ]});
       assert(cp.spawn.wasCalled);
     });
   });
