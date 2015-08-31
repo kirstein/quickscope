@@ -27,9 +27,6 @@ class Runner {
   }
 
   triggerCmd(dependency) {
-    if (!dependency.targets) {
-      return;
-    }
     let cmd = buildCmd(this.cmd, dependency.targets);
     console.log('running cmd:', cmd.join(' '));
     runCmd(cmd, this.cwd);
