@@ -28,8 +28,8 @@ const constants  = {
 // d - [ C ]
 // e - [ Y ]
 var data = {
-  dependencies: {},
-  cache: {}
+  dependencies : {},
+  cache        : {}
 };
 
 
@@ -91,10 +91,10 @@ function findOrphans (dependency, deps) {
   let dependencies = data.dependencies;
   let targets      = dependency.targets;
   return _.reduce(targets, function (result, target) {
-    let cachedDeps = data.cache[target];
-    let excluded   = getExcluded(cachedDeps, deps);
-    let orphans    = _.filter(excluded, function (orphan) {
+    let excluded = getExcluded(data.cache[target], deps);
+    let orphans  = _.filter(excluded, function (orphan) {
       let orphanModel = dependencies[orphan];
+      console.log(orphanModel);
       orphanModel.removeTarget(target);
       return !orphanModel.targets.length;
     });

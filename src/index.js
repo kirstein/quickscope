@@ -2,14 +2,8 @@
 
 const chokidar  = require('chokidar');
 const _         = require('lodash');
-const path      = require('path');
 
-const hub    = require('./event-hub');
-const Runner = require('./runner');
-
-const constants = {
-  file: require('./constants/file-constants')
-};
+const Quickscope = require('./quickscope');
 
 // Initiating stores
 require('./stores/dependency-store')._registerEvents();
@@ -21,24 +15,6 @@ const DEFAULT_OPTS = {
   followSymlinks: true
 };
 
-function preparePayload (cwd, target) {
-  return {
-    path: target,
-    cwd: cwd
-  };
-}
-
-function addTarget (cwd, target) {
-  let data = preparePayload(cwd, target);
-  console.log('file added: ', target);
-  hub.emit(constants.file.FILE_ADDED, data);
-}
-
-function unlinkTarget (cwd, target) {
-  console.log('file removed: ', target);
-  hub.emit(constants.file.FILE_REMOVED, path.join(cwd, target));
-}
-
 function buildOpts (cwd, options) {
   return _.assign({}, DEFAULT_OPTS, {
     cwd: cwd
@@ -49,17 +25,12 @@ module.exports = function (glob, cmd, cwd, options) {
   cwd = cwd || process.cwd();
 
   if (!cmd) {
-    throw new Error('Cmd not defined');
+    throw new Error('No cmd defined');
   }
 
   const opts    = buildOpts(cwd, options);
   const watcher = chokidar.watch(glob, opts);
-  const runner  = new Runner(cmd, cwd, watcher);
-
-  watcher.on('add', _.partial(addTarget, cwd));
-  watcher.on('unlink', _.partial(unlinkTarget, cwd));
-
-  return runner;
+  return new Quickscope(cmd, cwd, watcher);
 };
 
 module.exports.DEFAULT_OPTS = DEFAULT_OPTS;
