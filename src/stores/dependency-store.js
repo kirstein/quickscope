@@ -4,8 +4,9 @@ const _     = require('lodash');
 const dTree = require('dependency-tree');
 const path  = require('path');
 
-const hub        = require('../event-hub');
-const Dependency = require('../models/dependency');
+const hub         = require('../event-hub');
+const Dependency  = require('../models/dependency');
+const getExcluded = require('../lib/get-excluded');
 
 const constants  = {
   deps    : require('../constants/dependency-constants'),
@@ -84,15 +85,6 @@ function addTarget (payload) {
   let deps         = parseDependencies(payload);
   let dependencies = buildDependencyList(deps, path, payload.cwd);
   hub.emit(constants.deps.MULTIPLE_DEPENDENCY_ADDED, dependencies);
-}
-
-function getExcluded (arr1, arr2) {
-  return _.reduce(arr1, function (old, val) {
-    if (!_.contains(arr2, val)) {
-      old.push(val);
-    }
-    return old;
-  }, []);
 }
 
 function findOrphans (dependency, deps) {

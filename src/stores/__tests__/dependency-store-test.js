@@ -5,6 +5,7 @@ const dTree  = require('dependency-tree');
 
 jest.dontMock('../dependency-store');
 jest.dontMock('../../models/dependency');
+jest.dontMock('../../lib/get-excluded');
 jest.dontMock('lodash');
 
 const store     = require('../dependency-store');
