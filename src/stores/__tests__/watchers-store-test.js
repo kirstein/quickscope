@@ -23,7 +23,7 @@ function onFirstCall (fn) {
   };
 }
 
-describe('placeholder', function() {
+describe('watcher store', function() {
   beforeEach(function() {
     hub.emit.mockClear();
     hub.on.mockClear();
@@ -62,11 +62,6 @@ describe('placeholder', function() {
     beforeEach(function() {
       store._registerEvents();
       this.addDependency = hub.on.mock.calls[1][1];
-    });
-
-    it('should not add dependency to watchers list if there are no targets', function() {
-      this.addDependency([ { path: 'xxx' }]);
-      assert(!store.getWatchers().xxx);
     });
 
     it('should add dependency to watchers list', function() {
@@ -129,6 +124,32 @@ describe('placeholder', function() {
       });
       this.addDependency([ { path: 'xxx', targets: [ 'xx' ] }]);
       this.removeDependency('xxx');
+      assert(spy.wasCalled);
+    });
+  });
+
+  describe('dependency unwatching', function() {
+    beforeEach(function() {
+      store._registerEvents();
+      this.addDependency = hub.on.mock.calls[1][1];
+      this.removeDependency = hub.on.mock.calls[2][1];
+      this.removeMultipleDependency = hub.on.mock.calls[3][1];
+    });
+
+    it('should remove the path from watchers list', function() {
+      this.addDependency([ { path: 'xxx', targets: [ 'xx' ] }]);
+      this.removeMultipleDependency(['xxx']);
+      assert(!store.getWatchers().xxx);
+    });
+
+    it('should trigger close on watcher', function() {
+      let spy = jasmine.createSpy();
+      spyOn(chokidar, 'watch').andReturn({
+        on: function() {},
+        close: spy
+      });
+      this.addDependency([ { path: 'xxx', targets: [ 'xx' ] }]);
+      this.removeMultipleDependency(['xxx']);
       assert(spy.wasCalled);
     });
   });
