@@ -34,12 +34,16 @@ function parseDependencies (payload) {
   return dTree.toList(payload.path, payload.cwd);
 }
 
-function buildDependencyList (dependencies, target) {
+function parseDependenciesByPath (path) {
+  return dTree.toList(path);
+}
+
+function buildDependencyList (dependencies, target, cwd) {
   let deps = data.dependencies;
   // Flip the dependency list
   // from target: [ dependency... ] to dependency: [ target ]
   return _.map(dependencies, function (dep) {
-    deps[dep] = deps[dep] || new Dependency(dep);
+    deps[dep] = deps[dep] || new Dependency(dep, cwd);
     deps[dep].addTarget(target);
     return deps[dep];
   });
@@ -61,15 +65,15 @@ function getFullPath (payload) {
 function addFile (payload) {
   let path         = getFullPath(payload);
   let deps         = parseDependencies(payload);
-  let dependencies = buildDependencyList(deps, path);
+  let dependencies = buildDependencyList(deps, path, payload.cwd);
   hub.emit(constants.deps.MULTIPLE_DEPENDENCY_ADDED, dependencies);
 }
 
 function changeFile (payload) {
-  let path = getFullPath(payload);
-  let deps = parseDependencies(payload);
-  buildDependencyList(deps, path);
-  hub.emit(constants.deps.MULTIPLE_DEPENDENCY_CHANGED);
+  let path         = getFullPath(payload);
+  let deps         = parseDependencies(payload);
+  let dependencies = buildDependencyList(deps, path, payload.cwd);
+  hub.emit(constants.deps.MULTIPLE_DEPENDENCY_CHANGED, dependencies);
 }
 
 function removeFile (path) {
@@ -87,7 +91,8 @@ function removeFile (path) {
 }
 
 function changeDependency (dependency) {
-  // console.log(dependency);
+  console.log(dependency);
+  hub.emit(constants.deps.MULTIPLE_DEPENDENCY_CHANGED);
 }
 
 exports.getDependencies = function () {
