@@ -1,6 +1,7 @@
 'use strict';
 
 const assert = require('assert');
+const dTree  = require('dependency-tree');
 
 jest.dontMock('../dependency-store');
 jest.dontMock('../../models/dependency');
@@ -67,9 +68,10 @@ describe('dependency-store', function() {
     });
 
     it('should add deps to deps', function() {
+      spyOn(dTree, 'toList').andReturn(['one', 'two']);
       this.addFile({
-        path: __dirname,
-        deps: [ 'one', 'two' ]
+        cwd: __dirname,
+        path: 'xxx'
       });
       let deps = store.getDependencies();
       assert(deps.one);
@@ -77,31 +79,34 @@ describe('dependency-store', function() {
     });
 
     it('should add target locations to deps', function() {
+      spyOn(dTree, 'toList').andReturn(['one']);
       this.addFile({
-        path: __dirname,
-        deps: [ 'one' ]
+        cwd: __dirname,
+        path: 'one'
       });
       let one = store.getDependencies().one;
       assert.strictEqual(one.targets.length, 1);
     });
 
     it('should target multiple target locations to one dep', function() {
+      spyOn(dTree, 'toList').andReturn(['one']);
       this.addFile({
-        path: 'loc2',
-        deps: [ 'one' ]
+        cwd: 'loc2',
+        path: 'xxx'
       });
       this.addFile({
-        path: 'loc1',
-        deps: [ 'one' ]
+        cwd: 'loc1',
+        path: 'xxx'
       });
       let one = store.getDependencies().one;
       assert.strictEqual(one.targets.length, 2);
     });
 
     it('should trigger dependency added event', function() {
+      spyOn(dTree, 'toList').andReturn(['one']);
       this.addFile({
-        path: 'loc2',
-        deps: [ 'one' ]
+        cwd: 'loc2',
+        path: 'xxx'
       });
 
       assert.strictEqual(hub.emit.mock.calls[0][0], constants.deps.MULTIPLE_DEPENDENCY_ADDED);
@@ -122,13 +127,14 @@ describe('dependency-store', function() {
     });
 
     it('should add changed target locations to deps', function() {
+      spyOn(dTree, 'toList').andReturn(['one']).andReturn(['one', 'two']);
       this.addFile({
-        path: __dirname,
-        deps: [ 'one' ]
+        cwd: __dirname,
+        path: 'zzz'
       });
       this.changeFile({
-        path: __dirname,
-        deps: [ 'one', 'two' ]
+        cwd: __dirname,
+        path: 'zzz'
       });
       let one = store.getDependencies().one;
       let two = store.getDependencies().two;
@@ -137,13 +143,14 @@ describe('dependency-store', function() {
     });
 
     it('should trigger dependency added event', function() {
+      spyOn(dTree, 'toList').andReturn(['one']).andReturn(['one', 'two']);
       this.addFile({
-        path: 'loc2',
-        deps: [ 'one' ]
+        cwd: 'loc2',
+        path: 'xx',
       });
       this.changeFile({
-        path: __dirname,
-        deps: [ 'one', 'two' ]
+        cwd: __dirname,
+        path: 'xx',
       });
 assert.strictEqual(hub.emit.mock.calls[1][0], constants.deps.MULTIPLE_DEPENDENCY_CHANGED);
     });
@@ -163,28 +170,30 @@ assert.strictEqual(hub.emit.mock.calls[1][0], constants.deps.MULTIPLE_DEPENDENCY
     });
 
     it('should go through dependency list and remove itself from all dependencies', function() {
+      spyOn(dTree, 'toList').andReturn(['xxx']);
       this.addFile({
-        path: __dirname,
-        deps: [ 'one', 'two' ]
+        path: 'xxx',
+        cwd: __dirname
       });
-      this.removeFile(__dirname);
-      assert(!store.getDependencies().one);
-      assert(!store.getDependencies().two);
+      this.removeFile('xxx');
+      assert(!store.getDependencies().xxx);
     });
 
     it('should trigger dependencys removed event', function() {
+      spyOn(dTree, 'toList').andReturn(['xxx']);
       this.addFile({
-        path: __dirname,
-        deps: [ 'one', 'two' ]
+        cwd: __dirname,
+        path: 'xxx'
       });
-      this.removeFile(__dirname);
+      this.removeFile('xxx');
       assert.strictEqual(hub.emit.mock.calls[1][0], constants.deps.DEPENDENCY_REMOVED);
     });
 
     it('shouldnt trigger removed event if no dependencys were removed', function() {
+      spyOn(dTree, 'toList').andReturn(['not-included']);
       this.addFile({
-        path: __dirname,
-        deps: [ 'one', 'two' ]
+        cwd: __dirname,
+        path: 'xxx'
       });
       this.removeFile('xxx');
       assert(!hub.emit.mock.calls[1]);

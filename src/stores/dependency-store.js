@@ -1,13 +1,16 @@
 'use strict';
 
 const _     = require('lodash');
+const dTree = require('dependency-tree');
+const path  = require('path');
 
 const hub        = require('../event-hub');
 const Dependency = require('../models/dependency');
 
 const constants  = {
-  deps: require('../constants/dependency-constants'),
-  file: require('../constants/file-constants')
+  deps    : require('../constants/dependency-constants'),
+  file    : require('../constants/file-constants'),
+  watcher : require('../constants/watcher-constants')
 };
 
 // X, Y, C = targets
@@ -26,6 +29,10 @@ const constants  = {
 var data = {
   dependencies: {}
 };
+
+function parseDependencies (payload) {
+  return dTree.toList(payload.path, payload.cwd);
+}
 
 function buildDependencyList (dependencies, target) {
   let deps = data.dependencies;
@@ -47,16 +54,20 @@ function validatePayload (fn) {
   };
 }
 
+function getFullPath (payload) {
+  return path.join(payload.cwd, payload.path);
+}
+
 function addFile (payload) {
-  let path         = payload.path;
-  let deps         = payload.deps;
+  let path         = getFullPath(payload);
+  let deps         = parseDependencies(payload);
   let dependencies = buildDependencyList(deps, path);
   hub.emit(constants.deps.MULTIPLE_DEPENDENCY_ADDED, dependencies);
 }
 
 function changeFile (payload) {
-  let path = payload.path;
-  let deps = payload.deps;
+  let path = getFullPath(payload);
+  let deps = parseDependencies(payload);
   buildDependencyList(deps, path);
   hub.emit(constants.deps.MULTIPLE_DEPENDENCY_CHANGED);
 }
@@ -75,6 +86,10 @@ function removeFile (path) {
   }
 }
 
+function changeDependency (dependency) {
+  // console.log(dependency);
+}
+
 exports.getDependencies = function () {
   return data.dependencies;
 };
@@ -87,4 +102,5 @@ exports._registerEvents = function () {
   hub.on(constants.file.FILE_ADDED, validatePayload(addFile));
   hub.on(constants.file.FILE_CHANGED, validatePayload(changeFile));
   hub.on(constants.file.FILE_REMOVED, validatePayload(removeFile));
+  hub.on(constants.watcher.DEPENDENCY_CHANGED, changeDependency);
 };

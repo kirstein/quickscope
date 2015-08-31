@@ -2,7 +2,6 @@
 
 const chokidar  = require('chokidar');
 const _         = require('lodash');
-const dTree     = require('dependency-tree');
 const path      = require('path');
 
 const hub    = require('./event-hub');
@@ -22,18 +21,10 @@ const DEFAULT_OPTS = {
   followSymlinks: true
 };
 
-function getTargetPath (cwd, target) {
-  return path.join(cwd, target);
-}
-
-function getDeps (cwd, target) {
-  return dTree.toList(target, cwd);
-}
-
 function preparePayload (cwd, target) {
   return {
-    path: getTargetPath(cwd, target),
-    deps: getDeps(cwd, target)
+    path: target,
+    cwd: cwd
   };
 }
 
@@ -51,7 +42,7 @@ function changeTarget (cwd, target) {
 
 function unlinkTarget (cwd, target) {
   console.log('file removed: ', target);
-  hub.emit(constants.file.FILE_REMOVED, getTargetPath(cwd, target));
+  hub.emit(constants.file.FILE_REMOVED, path.join(cwd, target));
 }
 
 function buildOpts (cwd, options) {
