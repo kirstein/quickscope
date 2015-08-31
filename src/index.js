@@ -34,12 +34,6 @@ function addTarget (cwd, target) {
   hub.emit(constants.file.FILE_ADDED, data);
 }
 
-function changeTarget (cwd, target) {
-  let data = preparePayload(cwd, target);
-  console.log('file changed: ', target);
-  hub.emit(constants.file.FILE_CHANGED, data);
-}
-
 function unlinkTarget (cwd, target) {
   console.log('file removed: ', target);
   hub.emit(constants.file.FILE_REMOVED, path.join(cwd, target));
@@ -63,7 +57,6 @@ module.exports = function (glob, cmd, cwd, options) {
   const runner  = new Runner(cmd, cwd, watcher);
 
   watcher.on('add', _.partial(addTarget, cwd));
-  watcher.on('change', _.partial(changeTarget, cwd));
   watcher.on('unlink', _.partial(unlinkTarget, cwd));
 
   return runner;
