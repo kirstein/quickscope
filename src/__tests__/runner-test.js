@@ -47,7 +47,7 @@ describe('Runner', function() {
       let runner = new Runner();
       assert.throws(function() {
         runner.triggerCmd();
-      });
+      }, /dependency/);
     });
 
     it('should run execSync', function() {

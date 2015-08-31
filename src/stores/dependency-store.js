@@ -132,5 +132,5 @@ exports.clear = function () {
 exports._registerEvents = function () {
   hub.on(constants.file.FILE_ADDED, validatePayload(addTarget));
   hub.on(constants.file.FILE_REMOVED, validatePayload(removeFile));
-  hub.on(constants.watcher.DEPENDENCY_CHANGED, changeDependency);
+  hub.on(constants.watcher.DEPENDENCY_CHANGED, validatePayload(changeDependency));
 };

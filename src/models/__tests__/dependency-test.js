@@ -31,13 +31,13 @@ describe('dependency model', function() {
     it('should throw if no path is given', function() {
       assert.throws(function() {
         new Dependency();
-      });
+      }, /path/);
     });
 
     it('should throw if no cwd is given', function() {
       assert.throws(function() {
         new Dependency(__dirname);
-      });
+      }, /cwd/);
     });
   });
 

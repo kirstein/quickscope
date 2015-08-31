@@ -67,7 +67,7 @@ describe('dependency-store', function() {
     it('should throw if no payload is added', function() {
       assert.throws(function() {
         this.addTarget();
-      });
+      }.bind(this), /payload/);
     });
 
     it('should add deps to deps', function() {
@@ -126,7 +126,7 @@ describe('dependency-store', function() {
     it('should throw if no payload is added', function() {
       assert.throws(function() {
         this.changeDep();
-      });
+      }.bind(this), /payload/);
     });
 
     it('should add changed target locations to deps', function() {
@@ -257,7 +257,7 @@ describe('dependency-store', function() {
     it('should throw if no payload is added', function() {
       assert.throws(function() {
         this.removeFile();
-      });
+      }.bind(this), /payload/);
     });
 
     it('should go through dependency list and remove itself from all dependencies', function() {
