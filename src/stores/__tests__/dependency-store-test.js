@@ -16,6 +16,7 @@ const constants = {
 
 describe('dependency-store', function() {
   beforeEach(function() {
+    dTree._mockDeps = [];
     hub.emit.mockClear();
     hub.on.mockClear();
     store.clear();
@@ -127,36 +128,52 @@ describe('dependency-store', function() {
     });
 
     it('should add changed target locations to deps', function() {
-      spyOn(dTree, 'toList').andReturn(['one']).andReturn(['one', 'two']);
+      dTree._mockDeps = [ 'add' ];
       this.addFile({
         cwd: __dirname,
         path: 'zzz'
       });
+      dTree._mockDeps = [ 'add', 'change' ];
       this.changeFile({
         cwd: __dirname,
         path: 'zzz'
       });
-      let one = store.getDependencies().one;
-      let two = store.getDependencies().two;
+      let one = store.getDependencies().add;
+      let two = store.getDependencies().change;
       assert.strictEqual(one.targets.length, 1);
       assert.strictEqual(two.targets.length, 1);
     });
 
-    it('should trigger dependency added event', function() {
-      spyOn(dTree, 'toList').andReturn(['one']).andReturn(['one', 'two']);
+    it('should trigger dependency change event', function() {
+      dTree._mockDeps = [ 'one' ];
       this.addFile({
-        cwd: 'loc2',
+        cwd: __dirname,
         path: 'xx',
       });
+      dTree._mockDeps = [ 'one', 'two' ];
       this.changeFile({
         cwd: __dirname,
         path: 'xx',
       });
-assert.strictEqual(hub.emit.mock.calls[1][0], constants.deps.MULTIPLE_DEPENDENCY_CHANGED);
+      assert.strictEqual(hub.emit.mock.calls[1][0], constants.deps.MULTIPLE_DEPENDENCY_CHANGED);
+    });
+
+    it('should pass the change dependencies as event payload', function() {
+      dTree._mockDeps = [ 'one' ];
+      this.addFile({
+        cwd: __dirname,
+        path: 'xx',
+      });
+      dTree._mockDeps = [ 'one', 'two' ];
+      this.changeFile({
+        cwd: __dirname,
+        path: 'xx',
+      });
+      assert.strictEqual(hub.emit.mock.calls[1][1].length, 2);
     });
   });
 
-  describe('placeholder', function() {
+  describe('remove target', function() {
     beforeEach(function() {
       store._registerEvents();
       this.addFile    = hub.on.mock.calls[0][1];

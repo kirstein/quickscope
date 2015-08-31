@@ -3,10 +3,14 @@
 const _ = require('lodash');
 
 class Dependency {
-  constructor(path) {
+  constructor(path, cwd) {
     if (!path) {
       throw new Error('No dependency path defined');
     }
+    if (!cwd) {
+      throw new Error('No cwd defined');
+    }
+    this.cwd     = cwd;
     this.path    = path;
     this.targets = [];
   }

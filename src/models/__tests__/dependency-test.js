@@ -14,12 +14,17 @@ describe('dependency model', function() {
 
   describe('initiation', function() {
     it('should add path', function() {
-      let dep = new Dependency(__dirname);
+      let dep = new Dependency(__dirname, 'cwd');
       assert.strictEqual(dep.path, __dirname);
     });
 
+    it('should add cwd', function() {
+      let dep = new Dependency(__dirname, 'cwd');
+      assert.strictEqual(dep.cwd, 'cwd');
+    });
+
     it('should create a list of targets', function() {
-      let dep = new Dependency(__dirname);
+      let dep = new Dependency(__dirname, 'cwd');
       assert(Array.isArray(dep.targets));
     });
 
@@ -28,17 +33,23 @@ describe('dependency model', function() {
         new Dependency();
       });
     });
+
+    it('should throw if no cwd is given', function() {
+      assert.throws(function() {
+        new Dependency(__dirname);
+      });
+    });
   });
 
   describe('#hasTarget', function() {
     it('should return false if no targets', function() {
-      let dep    = new Dependency(__dirname);
+      let dep    = new Dependency(__dirname, 'cwd');
       let target = 'hello';
       assert.strictEqual(dep.hasTarget(target), false);
     });
 
     it('should return true if target exists', function() {
-      let dep    = new Dependency(__dirname);
+      let dep    = new Dependency(__dirname, 'cwd');
       let target = 'hello';
       dep.addTarget(target);
       assert.strictEqual(dep.hasTarget(target), true);
@@ -47,14 +58,14 @@ describe('dependency model', function() {
 
   describe('#addTarget', function() {
     it('should add targets to list', function() {
-      let dep    = new Dependency(__dirname);
+      let dep    = new Dependency(__dirname, 'cwd');
       let target = 'hello';
       dep.addTarget(target);
       assert.strictEqual(dep.targets[0], target);
     });
 
     it('should not add duplicate targets', function() {
-      let dep    = new Dependency(__dirname);
+      let dep    = new Dependency(__dirname, 'cwd');
       let target = 'hello';
       dep.addTarget(target);
       dep.addTarget(target);
@@ -65,7 +76,7 @@ describe('dependency model', function() {
   describe('#removeTarget', function() {
 
     it('should remove targets from list', function() {
-      let dep    = new Dependency(__dirname);
+      let dep    = new Dependency(__dirname, 'cwd');
       let target = 'hello';
       dep.addTarget(target);
       dep.removeTarget(target);
@@ -73,14 +84,14 @@ describe('dependency model', function() {
     });
 
     it('should return true if removed an element', function() {
-      let dep    = new Dependency(__dirname);
+      let dep    = new Dependency(__dirname, 'cwd');
       let target = 'hello';
       dep.addTarget(target);
       assert(dep.removeTarget(target));
     });
 
     it('should not remove element if its not in the list', function() {
-      let dep    = new Dependency(__dirname);
+      let dep    = new Dependency(__dirname, 'cwd');
       let target = 'hello';
       dep.addTarget(target);
       dep.removeTarget('wrong');
@@ -88,7 +99,7 @@ describe('dependency model', function() {
     });
 
     it('should return false if removing was not successful', function() {
-      let dep    = new Dependency(__dirname);
+      let dep    = new Dependency(__dirname, 'cwd');
       let target = 'hello';
       dep.addTarget(target);
       assert(!dep.removeTarget('wrong'));
