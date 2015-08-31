@@ -27,19 +27,19 @@ const constants  = {
 // d - [ C ]
 // e - [ Y ]
 var data = {
-  dependencies: {}
+  dependencies: {},
+  cache: {}
 };
+
 
 function parseDependencies (payload) {
   return dTree.toList(payload.path, payload.cwd);
 }
 
-function parseDependenciesByPath (path) {
-  return dTree.toList(path);
-}
-
 function buildDependencyList (dependencies, target, cwd) {
   let deps = data.dependencies;
+  // Cache the target deps. Make sure we exclude ourselves from that
+  data.cache[target] = _.without(dependencies, target);
   // Flip the dependency list
   // from target: [ dependency... ] to dependency: [ target ]
   return _.map(dependencies, function (dep) {
@@ -62,27 +62,16 @@ function getFullPath (payload) {
   return path.join(payload.cwd, payload.path);
 }
 
-function addFile (payload) {
-  let path         = getFullPath(payload);
-  let deps         = parseDependencies(payload);
-  let dependencies = buildDependencyList(deps, path, payload.cwd);
-  hub.emit(constants.deps.MULTIPLE_DEPENDENCY_ADDED, dependencies);
-}
-
-function changeFile (payload) {
-  let path         = getFullPath(payload);
-  let deps         = parseDependencies(payload);
-  let dependencies = buildDependencyList(deps, path, payload.cwd);
-  hub.emit(constants.deps.MULTIPLE_DEPENDENCY_CHANGED, dependencies);
+function deleteDependency (path) {
+  delete data.dependencies[path];
 }
 
 function removeFile (path) {
-  let deps       = data.dependencies;
   let hasRemoved = false;
-  _.each(deps, function(val, key) {
+  _.each(data.dependencies, function(val, key) {
     if (key === path || val.removeTarget(path)) {
       hasRemoved = true;
-      delete deps[key];
+      deleteDependency(key);
     }
   });
   if (hasRemoved) {
@@ -90,9 +79,54 @@ function removeFile (path) {
   }
 }
 
-function changeDependency (dependency) {
-  console.log(dependency);
-  hub.emit(constants.deps.MULTIPLE_DEPENDENCY_CHANGED);
+function addTarget (payload) {
+  let path         = getFullPath(payload);
+  let deps         = parseDependencies(payload);
+  let dependencies = buildDependencyList(deps, path, payload.cwd);
+  hub.emit(constants.deps.MULTIPLE_DEPENDENCY_ADDED, dependencies);
+}
+
+function getExcluded (arr1, arr2) {
+  return _.reduce(arr1, function (old, val) {
+    if (!_.contains(arr2, val)) {
+      old.push(val);
+    }
+    return old;
+  }, []);
+}
+
+function findOrphans (dependency, deps) {
+  let dependencies = data.dependencies;
+  let targets      = dependency.targets;
+  return _.reduce(targets, function (result, target) {
+    let cachedDeps = data.cache[target];
+    let excluded   = getExcluded(cachedDeps, deps);
+    let orphans    = _.filter(excluded, function (orphan) {
+      let orphanModel = dependencies[orphan];
+      orphanModel.removeTarget(target);
+      return !orphanModel.targets.length;
+    });
+    return _.union(result, orphans);
+  }, []);
+}
+
+function killOrphans (orphans) {
+  if (orphans.length) {
+    _.each(orphans, deleteDependency);
+    console.log('Murdering orphans: ', orphans);
+    hub.emit(constants.watcher.MULTIPLE_UNWATCH, orphans);
+  }
+}
+
+function changeDependency (dep) {
+  let path = dep.path;
+  let cwd  = dep.cwd;
+  let deps = parseDependencies({ path: path, cwd: cwd });
+  killOrphans(findOrphans(dep, deps)); // Die bastards. Die
+  let modifiedDeps = _.reduce(dep.targets, function (res, target) {
+    return _.union(res, buildDependencyList(deps, target, cwd));
+  }, []);
+  hub.emit(constants.deps.MULTIPLE_DEPENDENCY_CHANGED, modifiedDeps);
 }
 
 exports.getDependencies = function () {
@@ -104,8 +138,7 @@ exports.clear = function () {
 };
 
 exports._registerEvents = function () {
-  hub.on(constants.file.FILE_ADDED, validatePayload(addFile));
-  hub.on(constants.file.FILE_CHANGED, validatePayload(changeFile));
+  hub.on(constants.file.FILE_ADDED, validatePayload(addTarget));
   hub.on(constants.file.FILE_REMOVED, validatePayload(removeFile));
   hub.on(constants.watcher.DEPENDENCY_CHANGED, changeDependency);
 };
