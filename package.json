@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "description": "Quickly react to dependecy changes",
   "scripts": {
-    "test": "./node_modules/jest-cli/bin/jest.js"
+    "test": "./node_modules/jest-cli/bin/jest.js",
+    "watch": "quickscope"
   },
   "bin": {
     "quickscope": "./bin/quickscope.js"
@@ -21,7 +22,14 @@
     "chalk": "^1.1.1",
     "chokidar": "^1.0.5",
     "dependency-tree": "^3.1.1",
+    "find-project-root": "^1.1.1",
     "keymirror": "^0.1.1",
     "lodash": "^3.10.1"
+  },
+  "config": {
+    "quickscope": {
+      "files": "src/**/__tests__/**/**.js",
+      "cmd": "jest"
+    }
   }
 }

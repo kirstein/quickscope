@@ -1,4 +1,9 @@
 #!/usr/bin/env node
-var quickscope = require('../src/index');
+const findRoot   = require('find-project-root');
+const quickscope = require('../src/index');
 
-quickscope('src/**/__tests__/**/**.js', 'jest', process.cwd());
+const root = findRoot(process.cwd(), { markers: findRoot.MARKERS.concat('package.json') });
+const pkg = require(root + '/package.json');
+const cfg = pkg.config.quickscope;
+
+quickscope(cfg.files, cfg.cmd, root);
