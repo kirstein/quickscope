@@ -8,9 +8,10 @@ jest.dontMock('../../models/dependency');
 jest.dontMock('../../lib/get-excluded');
 jest.dontMock('lodash');
 
-const store     = require('../dependency-store');
-const hub       = require('../../event-hub');
-const constants = {
+const Dependency = require('../../models/dependency');
+const store      = require('../dependency-store');
+const hub        = require('../../event-hub');
+const constants  = {
   watcher : require('../../constants/watcher-constants'),
   file    : require('../../constants/file-constants'),
   deps    : require('../../constants/dependency-constants')
@@ -308,6 +309,33 @@ describe('dependency-store', function() {
       });
       this.removeFile('xxx');
       assert(!hub.emit.mock.calls[1]);
+    });
+  });
+
+  describe('remove depdency', function() {
+    beforeEach(function() {
+      store._registerEvents();
+      this.addTarget = hub.on.mock.calls[0][1];
+      this.changeDep = hub.on.mock.calls[2][1];
+      this.removeDep = hub.on.mock.calls[3][1];
+    });
+
+    it('should throw if no payload is added', function() {
+      assert.throws(function() {
+        this.removeDep();
+      }.bind(this), /payload/);
+    });
+
+    it('should go through change on each dependency target', function() {
+      let targetPath = __dirname + '/xxx';
+      dTree._mockDeps = [ targetPath, 'kala' ];
+      this.addTarget({
+        cwd: __dirname,
+        path: 'xxx'
+      });
+      hub.emit.mockClear();
+      this.removeDep(store.getDependencies().kala);
+      assert.strictEqual(hub.emit.mock.calls[1][1], store.getDependencies()[targetPath]);
     });
   });
 });

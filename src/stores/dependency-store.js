@@ -44,6 +44,7 @@ function buildDependencyList (dependencies, target, cwd) {
   // Flip the dependency list
   // from target: [ dependency... ] to dependency: [ target ]
   return _.map(dependencies, function (dep) {
+    // Write the dependency to the list
     deps[dep] = deps[dep] || new Dependency(dep, cwd);
     deps[dep].addTarget(target);
     return deps[dep];
@@ -67,9 +68,18 @@ function deleteDependency (path) {
   delete data.dependencies[path];
 }
 
+function findTargetByPath (path) {
+  console.log('finding', path);
+  console.log(data.dependencies);
+  return _.find(data.dependencies, function (val) {
+    console.log(val.path, path);
+    return val.path === path;
+  });
+}
+
 function removeFile (path) {
   let hasRemoved = false;
-  _.each(data.dependencies, function(val, key) {
+  _.each(data.dependencies, function (val, key) {
     if (key === path || val.removeTarget(path)) {
       hasRemoved = true;
       deleteDependency(key);
@@ -127,6 +137,15 @@ function changeDependency (dep) {
   hub.emit(constants.deps.MULTIPLE_DEPENDENCY_CHANGED, modifiedDeps);
 }
 
+function removeDependency (dep) {
+  if (dep.isTarget()) { return; }
+  _.each(dep.targets, function (target) {
+    // Recheck dependencies for targets
+    changeDependency(data.dependencies[target]);
+    hub.emit(constants.watcher.DEPENDENCY_CHANGED, data.dependencies[target]);
+  });
+}
+
 exports.getDependencies = function () {
   return data.dependencies;
 };
@@ -139,4 +158,5 @@ exports._registerEvents = function () {
   hub.on(constants.file.FILE_ADDED, validatePayload(addTarget));
   hub.on(constants.file.FILE_REMOVED, validatePayload(removeFile));
   hub.on(constants.watcher.DEPENDENCY_CHANGED, validatePayload(changeDependency));
+  hub.on(constants.watcher.DEPENDENCY_REMOVED, validatePayload(removeDependency));
 };
