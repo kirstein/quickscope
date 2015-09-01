@@ -184,11 +184,11 @@ describe('dependency-store', function() {
           cwd: __dirname,
           path: 'zzz'
         });
-        dTree._mockDeps = [ ];
+        dTree._mockDeps = [ 'change' ];
         this.changeDep({
           cwd: __dirname,
           path: 'xxx',
-          targets: [ __dirname + '/zzz' ]
+          targets: []
         });
         assert(!store.getDependencies().change);
       });
@@ -199,20 +199,40 @@ describe('dependency-store', function() {
           cwd: __dirname,
           path: 'zzz'
         });
-        dTree._mockDeps = [ 'linked', 'xxx', 'zzz' ];
+        dTree._mockDeps = [ 'linked', 'one', 'two' ];
         this.changeDep({
           cwd: __dirname,
           path: 'xxx',
           targets: [ __dirname + '/zzz' ]
         });
         assert(store.getDependencies().linked);
-        dTree._mockDeps = [ 'xxx', 'zzz' ];
+        dTree._mockDeps = [ 'two' ];
         this.changeDep({
           cwd: __dirname,
           path: 'xxx',
           targets: [ __dirname + '/zzz' ]
         });
         assert(!store.getDependencies().linked);
+        assert(!store.getDependencies().one);
+      });
+
+      it('should not remove dependency if its used by two targets and one drops it', function() {
+        dTree._mockDeps = [ 'notDropped' ];
+        this.addTarget({
+          cwd: __dirname,
+          path: 'zzz'
+        });
+        this.addTarget({
+          cwd: __dirname,
+          path: 'xxx',
+        });
+        dTree._mockDeps = [ ];
+        this.changeDep({
+          cwd: __dirname,
+          path: 'xxx',
+          targets: [ __dirname + '/xxx' ]
+        });
+        assert(store.getDependencies().notDropped);
       });
 
       it('should trigger unwatch event if there are orphans', function() {

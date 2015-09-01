@@ -87,18 +87,22 @@ function addTarget (payload) {
   hub.emit(constants.deps.MULTIPLE_DEPENDENCY_ADDED, dependencies);
 }
 
+function isOrphan (potentialOrphan) {
+  let orphanModel = data.dependencies[potentialOrphan];
+  // Orphan has only one target and we know that target.
+  return orphanModel.targets.length === 1;
+}
+
 function findOrphans (dependency, deps) {
-  let dependencies = data.dependencies;
-  let targets      = dependency.targets;
-  return _.reduce(targets, function (result, target) {
+  // Go through dependency targets to see if those targets
+  // have dropped any of their dependencies
+  return _.reduce(dependency.targets, function (result, target) {
+    // Get the list of dropped dependencies.
+    // Cache represents old dependencies, if this list is longer then we have a issue
     let excluded = getExcluded(data.cache[target], deps);
-    let orphans  = _.filter(excluded, function (orphan) {
-      let orphanModel = dependencies[orphan];
-      console.log(orphanModel);
-      orphanModel.removeTarget(target);
-      return !orphanModel.targets.length;
-    });
-    return _.union(result, orphans);
+    // All deps are the same
+    if (!excluded.length) { return result; }
+    return _.union(result, _.filter(excluded, isOrphan));
   }, []);
 }
 
