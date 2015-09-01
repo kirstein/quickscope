@@ -16,9 +16,11 @@ class Dependency {
   }
 
   addTarget(target) {
-    if (!this.hasTarget(target)) {
-      this.targets.push(target);
+    if (this.hasTarget(target)) { return; }
+    else if (this.isTarget()) {
+      throw new Error('Dependency is already a target. Target can have only one target.');
     }
+    this.targets.push(target);
   }
 
   removeTarget(target) {
@@ -31,6 +33,10 @@ class Dependency {
 
   hasTarget(target) {
     return _.includes(this.targets, target);
+  }
+
+  isTarget() {
+    return this.path === _.first(this.targets);
   }
 }
 

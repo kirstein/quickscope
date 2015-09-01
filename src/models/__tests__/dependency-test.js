@@ -71,10 +71,17 @@ describe('dependency model', function() {
       dep.addTarget(target);
       assert.strictEqual(dep.targets.length, 1);
     });
+
+    it('should throw if adding targets to a target', function() {
+      let dep = new Dependency(__dirname, 'cwd');
+      dep.addTarget(dep.path);
+      assert.throws(function() {
+        dep.addTarget('xxx');
+      }, /already a target/);
+    });
   });
 
   describe('#removeTarget', function() {
-
     it('should remove targets from list', function() {
       let dep    = new Dependency(__dirname, 'cwd');
       let target = 'hello';
@@ -103,6 +110,20 @@ describe('dependency model', function() {
       let target = 'hello';
       dep.addTarget(target);
       assert(!dep.removeTarget('wrong'));
+    });
+  });
+
+  describe('#isTarget', function() {
+    it('should be target if its path is the same as targets path', function() {
+      let dep = new Dependency(__dirname, 'cwd');
+      dep.addTarget(dep.path);
+      assert(dep.isTarget());
+    });
+
+    it('should not be target if paths differ', function() {
+      let dep = new Dependency(__dirname, 'cwd');
+      dep.addTarget('xxx');
+      assert(!dep.isTarget());
     });
   });
 });
