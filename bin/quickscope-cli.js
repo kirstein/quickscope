@@ -6,4 +6,4 @@ const root = findRoot(process.cwd(), { markers: findRoot.MARKERS.concat('package
 const pkg = require(root + '/package.json');
 const cfg = pkg.config.quickscope;
 
-quickscope(cfg.files, cfg.cmd, root);
+quickscope(cfg.files, cfg.cmd, { cwd: root });
