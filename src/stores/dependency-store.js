@@ -68,15 +68,6 @@ function deleteDependency (path) {
   delete data.dependencies[path];
 }
 
-function findTargetByPath (path) {
-  console.log('finding', path);
-  console.log(data.dependencies);
-  return _.find(data.dependencies, function (val) {
-    console.log(val.path, path);
-    return val.path === path;
-  });
-}
-
 function removeTarget (path) {
   let hasRemoved = false;
   _.each(data.dependencies, function (val, key) {
@@ -123,7 +114,6 @@ function findOrphans (dependency) {
 function killOrphans (orphans) {
   if (orphans.length) {
     _.each(orphans, deleteDependency);
-    console.log('Murdering orphans: ', orphans);
     hub.emit(constants.deps.MULTIPLE_DEPENDENCY_UNWATCH, orphans);
   }
 }
