@@ -257,7 +257,7 @@ describe('dependency-store', function() {
           path: 'xxx',
           targets: [ __dirname + '/zzz' ]
         });
-        assert.strictEqual(hub.emit.mock.calls[1][0], constants.watcher.MULTIPLE_UNWATCH);
+        assert.strictEqual(hub.emit.mock.calls[1][0], constants.deps.MULTIPLE_DEPENDENCY_UNWATCH);
       });
 
       it('should add dependencies as payload', function() {
@@ -307,7 +307,7 @@ describe('dependency-store', function() {
         path: 'xxx'
       });
       this.removeFile('xxx');
-      assert.strictEqual(hub.emit.mock.calls[1][0], constants.deps.DEPENDENCY_REMOVED);
+      assert.strictEqual(hub.emit.mock.calls[1][0], constants.deps.DEPENDENCY_UNWATCH);
     });
 
     it('shouldnt trigger removed event if no dependencys were removed', function() {

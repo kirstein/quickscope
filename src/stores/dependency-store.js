@@ -86,7 +86,7 @@ function removeFile (path) {
     }
   });
   if (hasRemoved) {
-    hub.emit(constants.deps.DEPENDENCY_REMOVED, path);
+    hub.emit(constants.deps.DEPENDENCY_UNWATCH, path);
   }
 }
 
@@ -124,7 +124,7 @@ function killOrphans (orphans) {
   if (orphans.length) {
     _.each(orphans, deleteDependency);
     console.log('Murdering orphans: ', orphans);
-    hub.emit(constants.watcher.MULTIPLE_UNWATCH, orphans);
+    hub.emit(constants.deps.MULTIPLE_DEPENDENCY_UNWATCH, orphans);
   }
 }
 

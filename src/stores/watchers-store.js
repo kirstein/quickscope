@@ -62,6 +62,6 @@ exports.clear = function () {
 exports._registerEvents = function () {
   hub.on(constants.deps.MULTIPLE_DEPENDENCY_ADDED, addMultipleIfNeeded);
   hub.on(constants.deps.MULTIPLE_DEPENDENCY_CHANGED, addMultipleIfNeeded);
-  hub.on(constants.deps.DEPENDENCY_REMOVED, unwatch);
-  hub.on(constants.watcher.MULTIPLE_UNWATCH, multipleUnwatch);
+  hub.on(constants.deps.DEPENDENCY_UNWATCH, unwatch);
+  hub.on(constants.deps.MULTIPLE_DEPENDENCY_UNWATCH, multipleUnwatch);
 };
