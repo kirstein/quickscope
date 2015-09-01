@@ -13,12 +13,11 @@ const constants = {
   watcher: require('../../constants/watcher-constants')
 };
 
-function onFirstCall (fn) {
-  let called = false;
+function onNthCall (count, fn) {
+  let calls = 0;
   return function () {
-    if (!called) {
+    if (++calls === count) {
       fn.apply(this, arguments);
-      called = true;
     }
   };
 }
@@ -62,6 +61,7 @@ describe('watcher store', function() {
     beforeEach(function() {
       store._registerEvents();
       this.addDependency = hub.on.mock.calls[1][1];
+      this.removeDependency = hub.on.mock.calls[2][1];
     });
 
     it('should add dependency to watchers list', function() {
@@ -85,7 +85,7 @@ describe('watcher store', function() {
 
     it('should watch for change event', function() {
       spyOn(chokidar, 'watch').andReturn({
-        on: onFirstCall(function(evt) {
+        on: onNthCall(1, function(evt) {
           assert.strictEqual(evt, 'change');
         })
       });
@@ -95,11 +95,21 @@ describe('watcher store', function() {
     it('should trigger dependency changed event if file changes', function() {
       let mockCb;
       spyOn(chokidar, 'watch').andReturn({
-        on: onFirstCall(function(evt, cb) { mockCb = cb; })
+        on: onNthCall(1, function(evt, cb) { mockCb = cb; })
       });
       this.addDependency([ { path: 'xxx', targets: [ 'xx' ] }]);
       mockCb();
       assert.strictEqual(hub.emit.mock.calls[0][0], constants.watcher.DEPENDENCY_CHANGED);
+    });
+
+    it('should trigger dependency changed event if file unlinks', function() {
+      let mockCb;
+      spyOn(chokidar, 'watch').andReturn({
+        on: onNthCall(2, function(evt, cb) { mockCb = cb; })
+      });
+      this.addDependency([ { path: 'xxx', targets: [ 'xx' ] }]);
+      mockCb();
+      assert.strictEqual(hub.emit.mock.calls[0][0], constants.watcher.DEPENDENCY_REMOVED);
     });
   });
 
