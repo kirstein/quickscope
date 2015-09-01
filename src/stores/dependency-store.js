@@ -93,13 +93,17 @@ function isOrphan (potentialOrphan) {
   return orphanModel.targets.length === 1;
 }
 
-function findOrphans (dependency, deps) {
+function findOrphans (dependency) {
+  const cwd = dependency.cwd;
   // Go through dependency targets to see if those targets
   // have dropped any of their dependencies
   return _.reduce(dependency.targets, function (result, target) {
+    // Update dependency list for the target itself
+    let deps = parseDependencies({ cwd  : cwd, path : target });
     // Get the list of dropped dependencies.
     // Cache represents old dependencies, if this list is longer then we have a issue
     let excluded = getExcluded(data.cache[target], deps);
+    data.cache[target] = deps;
     // All deps are the same
     if (!excluded.length) { return result; }
     return _.union(result, _.filter(excluded, isOrphan));
@@ -115,12 +119,10 @@ function killOrphans (orphans) {
 }
 
 function changeDependency (dep) {
-  let path = dep.path;
-  let cwd  = dep.cwd;
-  let deps = parseDependencies({ path: path, cwd: cwd });
-  killOrphans(findOrphans(dep, deps)); // Die bastards. Die
+  let deps = parseDependencies(dep);
+  killOrphans(findOrphans(dep)); // Die bastards. Die
   let modifiedDeps = _.reduce(dep.targets, function (res, target) {
-    return _.union(res, buildDependencyList(deps, target, cwd));
+    return _.union(res, buildDependencyList(deps, target, dep.cwd));
   }, []);
   hub.emit(constants.deps.MULTIPLE_DEPENDENCY_CHANGED, modifiedDeps);
 }
