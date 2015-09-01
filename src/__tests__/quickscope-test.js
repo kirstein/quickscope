@@ -10,9 +10,10 @@ const spawn      = require('../lib/spawn');
 const hub        = require('../event-hub');
 const chokidar   = require('chokidar');
 const constants = {
-  watcher: require('../constants/watcher-constants'),
-  target : require('../constants/target-constants'),
-  deps   : require('../constants/dependency-constants')
+  watcher    : require('../constants/watcher-constants'),
+  target     : require('../constants/target-constants'),
+  deps       : require('../constants/dependency-constants'),
+  quickscope : require('../constants/quickscope-constants')
 };
 
 describe('Quickscope', function() {
@@ -34,6 +35,34 @@ describe('Quickscope', function() {
     it('should subscribe to event hub multiple dependency dirty event', function() {
       new Quickscope('cmd', 'cwd', chokidar.watch());
       assert.strictEqual(hub.on.mock.calls[1][0], constants.deps.MULTIPLE_DENENDENCY_DIRTY);
+    });
+
+    describe('ready event', function() {
+      beforeEach(function() {
+        this.runner = chokidar.watch();
+        spyOn(this.runner, 'on').andCallFake(function(evt, cb) {
+          if (evt === 'add') { this.addCb = cb; }
+          if (evt === 'ready') { this.readyCb = cb; }
+        }.bind(this));
+      });
+
+      it('should trigger ready if chokidar has triggered ready event', function() {
+        let qs = new Quickscope('cmd', 'cwd', this.runner);
+        qs.on(constants.quickscope.QUICKSCOPE_READY, function () {
+          assert(true);
+        });
+        this.readyCb();
+      });
+
+      it('should add watching files as params', function() {
+        let qs = new Quickscope('cmd', 'cwd', this.runner);
+        qs.on(constants.quickscope.QUICKSCOPE_READY, function (files) {
+          assert.strictEqual(files.length, 1);
+          assert.strictEqual(files[0], 'kala');
+        });
+        this.addCb('kala');
+        this.readyCb();
+      });
     });
   });
 
@@ -63,6 +92,13 @@ describe('Quickscope', function() {
       assert.strictEqual(payload.cwd, 'cwd');
       assert.strictEqual(payload.path, 'target');
     });
+
+    it('should trigger quickscope target add event', function() {
+      this.qs.on(constants.quickscope.QUICKSCOPE_TARGET_ADD, function(target) {
+        assert.strictEqual(target, 'target');
+      });
+      this.qs.addTarget('target');
+    });
   });
 
   describe('#unlinkTarget', function() {
@@ -91,6 +127,13 @@ describe('Quickscope', function() {
       assert.strictEqual(payload, 'cwd/target');
     });
 
+    it('should trigger quickscope target unlink event', function() {
+      this.qs.on(constants.quickscope.QUICKSCOPE_TARGET_UNLINK, function(target) {
+        assert.strictEqual(target, 'target');
+      });
+      this.qs.unlinkTarget('target');
+    });
+
   });
 
   describe('#triggerCmd', function() {
@@ -113,6 +156,17 @@ describe('Quickscope', function() {
         targets: [ 'x', 'z' ]
       });
       assert(spawn.mock.calls[0]);
+    });
+
+    it('should trigger run event', function() {
+      this.qs.on(constants.quickscope.QUICKSCOPE_RUN, function(targets) {
+        assert.strictEqual(targets.length, 2);
+        assert.strictEqual(targets[0], 'x');
+        assert.strictEqual(targets[1], 'z');
+      });
+      this.qs.triggerCmd({
+        targets: [ 'x', 'z' ]
+      });
     });
 
     it('should pass spawn cmd and cwd', function() {
@@ -138,6 +192,17 @@ describe('Quickscope', function() {
         let cwd  = call[1];
         assert.strictEqual(cmd, 'cmd x z yy ab');
         assert.strictEqual(cwd, 'cwd');
+      });
+
+      it('should trigger run event', function() {
+        this.qs.on(constants.quickscope.QUICKSCOPE_RUN, function(targets) {
+          assert.strictEqual(targets.length, 4);
+        });
+        this.qs.triggerCmd([{
+          targets: [ 'x', 'z' ]
+        }, {
+          targets: [ 'yy', 'ab']
+        }]);
       });
     });
   });
