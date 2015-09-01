@@ -19,6 +19,9 @@ function buildWatcher (dependency) {
   watcher.on('change', function () {
     hub.emit(constants.watcher.DEPENDENCY_CHANGED, dependency);
   });
+  watcher.on('unlink', function () {
+    hub.emit(constants.watcher.DEPENDENCY_REMOVED, dependency);
+  });
   return watcher;
 }
 
