@@ -28,7 +28,7 @@ describe('Quickscope', function() {
   describe('initiation', function() {
     it('should subscribe to event hub dependency changed event', function() {
       new Quickscope('cmd', 'cwd', chokidar.watch());
-      assert.strictEqual(hub.on.mock.calls[0][0], constants.watcher.DEPENDENCY_CHANGED);
+      assert.strictEqual(hub.on.mock.calls[0][0], constants.watcher.DEPENDENCY_FILE_CHANGED);
     });
   });
 

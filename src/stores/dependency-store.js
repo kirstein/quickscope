@@ -141,8 +141,7 @@ function removeDependency (dep) {
   if (dep.isTarget()) { return; }
   _.each(dep.targets, function (target) {
     // Recheck dependencies for targets
-    changeDependency(data.dependencies[target]);
-    hub.emit(constants.watcher.DEPENDENCY_CHANGED, data.dependencies[target]);
+    hub.emit(constants.watcher.DEPENDENCY_FILE_CHANGED, data.dependencies[target]);
   });
 }
 
@@ -157,6 +156,6 @@ exports.clear = function () {
 exports._registerEvents = function () {
   hub.on(constants.file.FILE_ADDED, validatePayload(addTarget));
   hub.on(constants.file.FILE_REMOVED, validatePayload(removeFile));
-  hub.on(constants.watcher.DEPENDENCY_CHANGED, validatePayload(changeDependency));
-  hub.on(constants.watcher.DEPENDENCY_REMOVED, validatePayload(removeDependency));
+  hub.on(constants.watcher.DEPENDENCY_FILE_CHANGED, validatePayload(changeDependency));
+  hub.on(constants.watcher.DEPENDENCY_FILE_UNLINK, validatePayload(removeDependency));
 };

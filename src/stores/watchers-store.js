@@ -17,10 +17,10 @@ var data = {};
 function buildWatcher (dependency) {
   let watcher = chokidar.watch(dependency.path);
   watcher.on('change', function () {
-    hub.emit(constants.watcher.DEPENDENCY_CHANGED, dependency);
+    hub.emit(constants.watcher.DEPENDENCY_FILE_CHANGED, dependency);
   });
   watcher.on('unlink', function () {
-    hub.emit(constants.watcher.DEPENDENCY_REMOVED, dependency);
+    hub.emit(constants.watcher.DEPENDECY_FILE_UNLINK, dependency);
   });
   return watcher;
 }

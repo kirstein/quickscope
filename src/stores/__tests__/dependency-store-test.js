@@ -8,7 +8,6 @@ jest.dontMock('../../models/dependency');
 jest.dontMock('../../lib/get-excluded');
 jest.dontMock('lodash');
 
-const Dependency = require('../../models/dependency');
 const store      = require('../dependency-store');
 const hub        = require('../../event-hub');
 const constants  = {
@@ -53,9 +52,19 @@ describe('dependency-store', function() {
       assert.strictEqual(hub.on.mock.calls[0][0], constants.file.FILE_ADDED);
     });
 
-    it('should register to change file event', function() {
+    it('should register to file remove event', function() {
       store._registerEvents();
-      assert.strictEqual(hub.on.mock.calls[2][0], constants.watcher.DEPENDENCY_CHANGED);
+      assert.strictEqual(hub.on.mock.calls[1][0], constants.file.FILE_REMOVED);
+    });
+
+    it('should register to dependency change file event', function() {
+      store._registerEvents();
+      assert.strictEqual(hub.on.mock.calls[2][0], constants.watcher.DEPENDENCY_FILE_CHANGED);
+    });
+
+    it('should register to dependency remove change file event', function() {
+      store._registerEvents();
+      assert.strictEqual(hub.on.mock.calls[3][0], constants.watcher.DEPENDENCY_FILE_UNLINK);
     });
   });
 
@@ -335,7 +344,7 @@ describe('dependency-store', function() {
       });
       hub.emit.mockClear();
       this.removeDep(store.getDependencies().kala);
-      assert.strictEqual(hub.emit.mock.calls[1][1], store.getDependencies()[targetPath]);
+      assert.strictEqual(hub.emit.mock.calls[0][1], store.getDependencies()[targetPath]);
     });
   });
 });

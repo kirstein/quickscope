@@ -30,7 +30,7 @@ class Runner {
   _addListeners() {
     this.watcher.on('add', this.addTarget.bind(this));
     this.watcher.on('unlink', this.unlinkTarget.bind(this));
-    hub.on(constants.watcher.DEPENDENCY_CHANGED, this.triggerCmd.bind(this));
+    hub.on(constants.watcher.DEPENDENCY_FILE_CHANGED, this.triggerCmd.bind(this));
   }
 
   addTarget(target) {

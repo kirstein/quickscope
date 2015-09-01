@@ -99,7 +99,7 @@ describe('watcher store', function() {
       });
       this.addDependency([ { path: 'xxx', targets: [ 'xx' ] }]);
       mockCb();
-      assert.strictEqual(hub.emit.mock.calls[0][0], constants.watcher.DEPENDENCY_CHANGED);
+      assert.strictEqual(hub.emit.mock.calls[0][0], constants.watcher.DEPENDENCY_FILE_CHANGED);
     });
 
     it('should trigger dependency changed event if file unlinks', function() {
@@ -109,7 +109,7 @@ describe('watcher store', function() {
       });
       this.addDependency([ { path: 'xxx', targets: [ 'xx' ] }]);
       mockCb();
-      assert.strictEqual(hub.emit.mock.calls[0][0], constants.watcher.DEPENDENCY_REMOVED);
+      assert.strictEqual(hub.emit.mock.calls[0][0], constants.watcher.DEPENDECY_FILE_UNLINK);
     });
   });
 
