@@ -7,7 +7,7 @@
     "watch": "quickscope"
   },
   "bin": {
-    "quickscope": "./bin/quickscope.js"
+    "quickscope": "./bin/quickscope-cli.js"
   },
   "repository": {
     "type": "git",

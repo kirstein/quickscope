@@ -10,13 +10,6 @@ const constants = {
   deps    : require('./constants/dependency-constants')
 };
 
-function preparePayload (cwd, path) {
-  return {
-    path : path,
-    cwd  : cwd
-  };
-}
-
 function buildCmd (cmd, targets) {
   return cmd + ' ' + targets.join(' ');
 }
@@ -40,9 +33,11 @@ class Runner {
     if (!target) {
       throw new Error('No target defined');
     }
-    let data = preparePayload(this.cwd, target);
     console.log('file added: ', target);
-    hub.emit(constants.target.TARGET_ADDED, data);
+    hub.emit(constants.target.TARGET_ADDED, {
+      path: target,
+      cwd : this.cwd
+    });
   }
 
   unlinkTarget(target) {
