@@ -22,7 +22,7 @@ function getCfg (file) {
 }
 
 function showWelcome (files) {
-  let txt = [ 'Quickscope ready for duty. Watching following files: \n' ];
+  let txt = [ 'Watching following files: \n' ];
   let map = _.map(files, function (fname) {
     return GHETTO_TAB + fname;
   });
