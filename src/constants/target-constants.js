@@ -3,6 +3,6 @@
 const keymirror = require('keymirror');
 
 module.exports = keymirror({
-  FILE_ADDED: null,
-  FILE_REMOVED: null
+  TARGET_ADDED: null,
+  TARGET_REMOVED: null
 });

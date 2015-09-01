@@ -10,7 +10,7 @@ const getExcluded = require('../lib/get-excluded');
 
 const constants  = {
   deps    : require('../constants/dependency-constants'),
-  file    : require('../constants/file-constants'),
+  target  : require('../constants/target-constants'),
   watcher : require('../constants/watcher-constants')
 };
 
@@ -154,8 +154,8 @@ exports.clear = function () {
 };
 
 exports._registerEvents = function () {
-  hub.on(constants.file.FILE_ADDED, validatePayload(addTarget));
-  hub.on(constants.file.FILE_REMOVED, validatePayload(removeFile));
+  hub.on(constants.target.TARGET_ADDED, validatePayload(addTarget));
+  hub.on(constants.target.TARGET_REMOVED, validatePayload(removeFile));
   hub.on(constants.watcher.DEPENDENCY_FILE_CHANGED, validatePayload(changeDependency));
   hub.on(constants.watcher.DEPENDENCY_FILE_UNLINK, validatePayload(removeDependency));
 };

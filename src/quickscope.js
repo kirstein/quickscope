@@ -5,7 +5,7 @@ const path      = require('path');
 const spawn     = require('./lib/spawn');
 const constants = {
   watcher : require('./constants/watcher-constants'),
-  file    : require('./constants/file-constants')
+  target  : require('./constants/target-constants')
 };
 
 function preparePayload (cwd, path) {
@@ -39,7 +39,7 @@ class Runner {
     }
     let data = preparePayload(this.cwd, target);
     console.log('file added: ', target);
-    hub.emit(constants.file.FILE_ADDED, data);
+    hub.emit(constants.target.TARGET_ADDED, data);
   }
 
   unlinkTarget(target) {
@@ -47,7 +47,7 @@ class Runner {
       throw new Error('No target defined');
     }
     console.log('file removed: ', target);
-    hub.emit(constants.file.FILE_REMOVED, path.join(this.cwd, target));
+    hub.emit(constants.target.TARGET_REMOVED, path.join(this.cwd, target));
   }
 
   triggerCmd(dependency) {

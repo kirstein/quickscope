@@ -12,7 +12,7 @@ const store      = require('../dependency-store');
 const hub        = require('../../event-hub');
 const constants  = {
   watcher : require('../../constants/watcher-constants'),
-  file    : require('../../constants/file-constants'),
+  target  : require('../../constants/target-constants'),
   deps    : require('../../constants/dependency-constants')
 };
 
@@ -49,12 +49,12 @@ describe('dependency-store', function() {
   describe('event registering', function() {
     it('should register to add file event', function() {
       store._registerEvents();
-      assert.strictEqual(hub.on.mock.calls[0][0], constants.file.FILE_ADDED);
+      assert.strictEqual(hub.on.mock.calls[0][0], constants.target.TARGET_ADDED);
     });
 
     it('should register to file remove event', function() {
       store._registerEvents();
-      assert.strictEqual(hub.on.mock.calls[1][0], constants.file.FILE_REMOVED);
+      assert.strictEqual(hub.on.mock.calls[1][0], constants.target.TARGET_REMOVED);
     });
 
     it('should register to dependency change file event', function() {

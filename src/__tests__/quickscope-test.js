@@ -11,7 +11,7 @@ const hub        = require('../event-hub');
 const chokidar   = require('chokidar');
 const constants = {
   watcher: require('../constants/watcher-constants'),
-  file: require('../constants/file-constants')
+  target : require('../constants/target-constants')
 };
 
 describe('Quickscope', function() {
@@ -49,7 +49,7 @@ describe('Quickscope', function() {
 
     it('should emit file added event', function() {
       this.qs.addTarget('test');
-      assert.strictEqual(hub.emit.mock.calls[0][0], constants.file.FILE_ADDED);
+      assert.strictEqual(hub.emit.mock.calls[0][0], constants.target.TARGET_ADDED);
     });
 
     it('should add the correct payload to file added event', function() {
@@ -77,7 +77,7 @@ describe('Quickscope', function() {
 
     it('should emit file removed event', function() {
       this.qs.unlinkTarget('test');
-      assert.strictEqual(hub.emit.mock.calls[0][0], constants.file.FILE_REMOVED);
+      assert.strictEqual(hub.emit.mock.calls[0][0], constants.target.TARGET_REMOVED);
     });
 
     it('should add the correct payload to file added event', function() {
