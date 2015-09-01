@@ -11,7 +11,8 @@ const hub        = require('../event-hub');
 const chokidar   = require('chokidar');
 const constants = {
   watcher: require('../constants/watcher-constants'),
-  target : require('../constants/target-constants')
+  target : require('../constants/target-constants'),
+  deps   : require('../constants/dependency-constants')
 };
 
 describe('Quickscope', function() {
@@ -29,6 +30,10 @@ describe('Quickscope', function() {
     it('should subscribe to event hub dependency changed event', function() {
       new Quickscope('cmd', 'cwd', chokidar.watch());
       assert.strictEqual(hub.on.mock.calls[0][0], constants.watcher.DEPENDENCY_FILE_CHANGED);
+    });
+    it('should subscribe to event hub multiple dependency dirty event', function() {
+      new Quickscope('cmd', 'cwd', chokidar.watch());
+      assert.strictEqual(hub.on.mock.calls[1][0], constants.deps.MULTIPLE_DENENDENCY_DIRTY);
     });
   });
 
