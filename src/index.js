@@ -26,6 +26,8 @@ module.exports = function (glob, cmd, cwd, options) {
 
   if (!cmd) {
     throw new Error('No cmd defined');
+  } else if (!glob) {
+    throw new Error('No glob defined');
   }
 
   const opts    = buildOpts(cwd, options);
