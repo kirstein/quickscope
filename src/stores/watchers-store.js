@@ -20,7 +20,7 @@ function buildWatcher (dependency) {
     hub.emit(constants.watcher.DEPENDENCY_FILE_CHANGED, dependency);
   });
   watcher.on('unlink', function () {
-    hub.emit(constants.watcher.DEPENDECY_FILE_UNLINK, dependency);
+    hub.emit(constants.watcher.DEPENDENCY_FILE_UNLINK, dependency);
   });
   return watcher;
 }

@@ -109,7 +109,7 @@ describe('watcher store', function() {
       });
       this.addDependency([ { path: 'xxx', targets: [ 'xx' ] }]);
       mockCb();
-      assert.strictEqual(hub.emit.mock.calls[0][0], constants.watcher.DEPENDECY_FILE_UNLINK);
+      assert.strictEqual(hub.emit.mock.calls[0][0], constants.watcher.DEPENDENCY_FILE_UNLINK);
     });
   });
 
