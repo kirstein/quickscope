@@ -335,7 +335,7 @@ describe('dependency-store', function() {
       }.bind(this), /payload/);
     });
 
-    it('should go through change on each dependency target', function() {
+    it('should trigger multiple dependency dirty event', function() {
       let targetPath = __dirname + '/xxx';
       dTree._mockDeps = [ targetPath, 'kala' ];
       this.addTarget({
@@ -344,7 +344,7 @@ describe('dependency-store', function() {
       });
       hub.emit.mockClear();
       this.removeDep(store.getDependencies().kala);
-      assert.strictEqual(hub.emit.mock.calls[0][1], store.getDependencies()[targetPath]);
+      assert.strictEqual(hub.emit.mock.calls[0][0], constants.deps.MULTIPLE_DENENDENCY_DIRTY);
     });
   });
 });

@@ -77,7 +77,7 @@ function findTargetByPath (path) {
   });
 }
 
-function removeFile (path) {
+function removeTarget (path) {
   let hasRemoved = false;
   _.each(data.dependencies, function (val, key) {
     if (key === path || val.removeTarget(path)) {
@@ -139,10 +139,10 @@ function changeDependency (dep) {
 
 function removeDependency (dep) {
   if (dep.isTarget()) { return; }
-  _.each(dep.targets, function (target) {
-    // Recheck dependencies for targets
-    hub.emit(constants.watcher.DEPENDENCY_FILE_CHANGED, data.dependencies[target]);
+  let deps = _.map(dep.targets, function (target) {
+    return data.dependencies[target];
   });
+  hub.emit(constants.deps.MULTIPLE_DENENDENCY_DIRTY, deps);
 }
 
 exports.getDependencies = function () {
@@ -155,7 +155,7 @@ exports.clear = function () {
 
 exports._registerEvents = function () {
   hub.on(constants.target.TARGET_ADDED, validatePayload(addTarget));
-  hub.on(constants.target.TARGET_REMOVED, validatePayload(removeFile));
+  hub.on(constants.target.TARGET_REMOVED, validatePayload(removeTarget));
   hub.on(constants.watcher.DEPENDENCY_FILE_CHANGED, validatePayload(changeDependency));
   hub.on(constants.watcher.DEPENDENCY_FILE_UNLINK, validatePayload(removeDependency));
 };
