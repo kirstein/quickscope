@@ -21,7 +21,7 @@ describe('Quickscope', function() {
     spawn.mockClear();
   });
 
-  xit('should exist', function() {
+  it('should exist', function() {
     assert(Quickscope);
   });
 
@@ -119,6 +119,21 @@ describe('Quickscope', function() {
       let cwd  = call[1];
       assert.strictEqual(cmd, 'cmd x z');
       assert.strictEqual(cwd, 'cwd');
+    });
+
+    describe('multiple dependencies', function() {
+      it('should run spawn with all given targets', function() {
+        this.qs.triggerCmd([{
+          targets: [ 'x', 'z' ]
+        }, {
+          targets: [ 'yy', 'ab']
+        }]);
+        let call = spawn.mock.calls[0];
+        let cmd  = call[0];
+        let cwd  = call[1];
+        assert.strictEqual(cmd, 'cmd x z yy ab');
+        assert.strictEqual(cwd, 'cwd');
+      });
     });
   });
 });

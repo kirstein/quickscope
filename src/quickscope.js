@@ -3,9 +3,11 @@
 const hub       = require('./event-hub');
 const path      = require('path');
 const spawn     = require('./lib/spawn');
+const _         = require('lodash');
 const constants = {
   watcher : require('./constants/watcher-constants'),
-  target  : require('./constants/target-constants')
+  target  : require('./constants/target-constants'),
+  deps    : require('./constants/dependency-constants')
 };
 
 function preparePayload (cwd, path) {
@@ -31,6 +33,7 @@ class Runner {
     this.watcher.on('add', this.addTarget.bind(this));
     this.watcher.on('unlink', this.unlinkTarget.bind(this));
     hub.on(constants.watcher.DEPENDENCY_FILE_CHANGED, this.triggerCmd.bind(this));
+    hub.on(constants.deps.MULTIPLE_DENENDENCY_DIRTY, this.triggerCmd.bind(this));
   }
 
   addTarget(target) {
@@ -54,7 +57,10 @@ class Runner {
     if (!dependency) {
       throw new Error('No dependency given');
     }
-    let cmd = buildCmd(this.cmd, dependency.targets);
+    let targets = dependency.targets || _.reduce(dependency, function (res, dep) {
+      return _.union(res, dep.targets);
+    }, []);
+    let cmd = buildCmd(this.cmd, targets);
     console.log('running cmd:', cmd);
     spawn(cmd, this.cwd);
   }
