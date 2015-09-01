@@ -41,6 +41,8 @@ function addMultipleIfNeeded (deps) {
 
 function unwatch (path) {
   let dep = data[path];
+  // Seems that we do not have a target to unwatch. Oh well.
+  if (!dep) { return; }
   dep.watcher.close();
   delete data[path];
 }
