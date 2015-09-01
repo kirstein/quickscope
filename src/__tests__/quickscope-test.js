@@ -138,6 +138,12 @@ describe('Quickscope', function() {
 
   describe('#triggerCmd', function() {
     beforeEach(function() {
+
+      spawn.mockImplementation(function () {
+        return {
+          on: function(evt, cb) { cb(); }.bind(this)
+        };
+      }.bind(this));
       this.qs = new Quickscope('cmd', 'cwd', chokidar.watch());
     });
 
@@ -163,6 +169,17 @@ describe('Quickscope', function() {
         assert.strictEqual(targets.length, 2);
         assert.strictEqual(targets[0], 'x');
         assert.strictEqual(targets[1], 'z');
+      });
+      this.qs.triggerCmd({
+        targets: [ 'x', 'z' ]
+      });
+    });
+
+    it('should pass done fn to run cmd that shows if the command has finished', function() {
+      this.qs.on(constants.quickscope.QUICKSCOPE_RUN, function(targets, done) {
+        done(function() {
+          assert(true);
+        });
       });
       this.qs.triggerCmd({
         targets: [ 'x', 'z' ]

@@ -67,8 +67,13 @@ class Runner extends EventEmitter {
     let targets = dependency.targets || _.reduce(dependency, function (res, dep) {
       return _.union(res, dep.targets);
     }, []);
-    this.emit(constants.quickscope.QUICKSCOPE_RUN, targets);
-    spawn(buildCmd(this.cmd, targets), this.cwd);
+    let doneFn;
+    this.emit(constants.quickscope.QUICKSCOPE_RUN, targets, function (fn) {
+      doneFn = fn;
+    });
+    spawn(buildCmd(this.cmd, targets), this.cwd).on('close', function (code) {
+      if (doneFn) { doneFn(code); }
+    });
   }
 }
 
