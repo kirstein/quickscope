@@ -3,6 +3,7 @@
 'use strict';
 
 const _          = require('lodash');
+const argv       = require('minimist')(process.argv.slice(2));
 const path       = require('path');
 const findRoot   = require('find-project-root');
 const Spinner    = require('cli-spinner').Spinner;
@@ -13,7 +14,8 @@ const root       = findRoot(process.cwd(), {
 
 const GHETTO_TAB = '  ';
 
-function getCfg (file) {
+function getCfg () {
+  let file = argv.c || 'package.json';
   let conf = require(path.join(root, file));
   if (_.endsWith(file, 'package.json')) {
     return conf.config.quickscope;
@@ -33,7 +35,7 @@ function fileChange (msg, file) {
   return [ '\n\n' + GHETTO_TAB, msg, file, '\n' ].join(' ');
 }
 
-const cfg = getCfg('package.json');
+const cfg = getCfg();
 
 let watching = new Spinner('%s waiting for changes...');
 watching.setSpinnerString('|/-\\');
