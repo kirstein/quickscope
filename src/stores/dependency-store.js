@@ -4,7 +4,6 @@ const _     = require('lodash');
 const dTree = require('dependency-tree');
 const path  = require('path');
 
-const hub         = require('../event-hub');
 const Dependency  = require('../models/dependency');
 const getExcluded = require('../lib/get-excluded');
 
@@ -27,125 +26,121 @@ const constants  = {
 // c - [ X ]
 // d - [ C ]
 // e - [ Y ]
-var data = {
-  dependencies : {},
-  cache        : {}
-};
-
-
 function parseDependencies (payload) {
   return dTree.toList(payload.path, payload.cwd);
-}
-
-function buildDependencyList (dependencies, target, cwd) {
-  let deps = data.dependencies;
-  // Cache the target deps. Make sure we exclude ourselves from that
-  data.cache[target] = _.without(dependencies, target);
-  // Flip the dependency list
-  // from target: [ dependency... ] to dependency: [ target ]
-  return _.map(dependencies, function (dep) {
-    // Write the dependency to the list
-    deps[dep] = deps[dep] || new Dependency(dep, cwd);
-    deps[dep].addTarget(target);
-    return deps[dep];
-  });
-}
-
-function validatePayload (fn) {
-  return function (payload) {
-    if (!payload) {
-      throw new Error('No payload attached');
-    }
-    return fn(payload);
-  };
 }
 
 function getFullPath (payload) {
   return path.join(payload.cwd, payload.path);
 }
 
-function deleteDependency (path) {
-  delete data.dependencies[path];
-}
+class DependenciesStore {
+  constructor (hub) {
+    this._hub = hub;
+    this._dependencies = {};
+    this._cache        = {};
+    this._registerEvents();
+  }
 
-function removeTarget (path) {
-  let hasRemoved = false;
-  _.each(data.dependencies, function (val, key) {
-    if (key === path || val.removeTarget(path)) {
-      hasRemoved = true;
-      deleteDependency(key);
+  _registerEvents () {
+    this._hub.on(constants.target.TARGET_ADDED, this.addTarget.bind(this));
+    this._hub.on(constants.target.TARGET_REMOVED, this.removeTarget.bind(this));
+    this._hub.on(constants.watcher.DEPENDENCY_FILE_CHANGED, this.changeDependency.bind(this));
+    this._hub.on(constants.watcher.DEPENDENCY_FILE_UNLINK, this.removeDependency.bind(this));
+  }
+
+  _deleteDependency (path) {
+    delete this._dependencies[path];
+  }
+
+  _findOrphans (dependency) {
+    const cwd = dependency.cwd;
+    // Go through dependency targets to see if those targets
+    // have dropped any of their dependencies
+    return _.reduce(dependency.targets, function (result, target) {
+      // Update dependency list for the target itself
+      let deps = parseDependencies({ cwd  : cwd, path : target });
+      // Get the list of dropped dependencies.
+      // Cache represents old dependencies, if this list is longer then we have a issue
+      let excluded = getExcluded(this._cache[target], deps);
+      this._cache[target] = deps;
+      // All deps are the same
+      if (!excluded.length) { return result; }
+      return _.union(result, _.filter(excluded, this._isOrphan, this));
+    }, [], this);
+  }
+
+  _killOrphans (orphans) {
+    if (orphans.length) {
+      _.each(orphans, this._deleteDependency, this);
+      this._hub.emit(constants.deps.MULTIPLE_DEPENDENCY_UNWATCH, orphans);
     }
-  });
-  if (hasRemoved) {
-    hub.emit(constants.deps.DEPENDENCY_UNWATCH, path);
+  }
+
+  _buildDependencyList(dependencies, target, cwd) {
+    let deps = this._dependencies;
+    // Cache the target deps. Make sure we exclude ourselves from that
+    this._cache[target] = _.without(dependencies, target);
+    // Flip the dependency list
+    // from target: [ dependency... ] to dependency: [ target ]
+    return _.map(dependencies, function (dep) {
+      // Write the dependency to the list
+      deps[dep] = deps[dep] || new Dependency(dep, cwd);
+      deps[dep].addTarget(target);
+      return deps[dep];
+    });
+  }
+
+  _isOrphan (potentialOrphan) {
+    let orphanModel = this._dependencies[potentialOrphan];
+    // Orphan has only one target and we know that target.
+    return orphanModel.targets.length === 1;
+  }
+
+  getDependencies () {
+    return this._dependencies;
+  }
+
+  addTarget (target) {
+    if (!target) { throw new Error('No target defined'); }
+    let path         = getFullPath(target);
+    let deps         = parseDependencies(target);
+    let dependencies = this._buildDependencyList(deps, path, target.cwd);
+    this._hub.emit(constants.deps.MULTIPLE_DEPENDENCY_ADDED, dependencies);
+  }
+
+  removeDependency (dep) {
+    if (!dep) { throw new Error('No dependency defined'); }
+    if (dep.isTarget()) { return; }
+    let deps = _.map(dep.targets, function (target) {
+      return this._dependencies[target];
+    }, this);
+    this._hub.emit(constants.deps.MULTIPLE_DENENDENCY_DIRTY, deps);
+  }
+
+  changeDependency (dep) {
+    if (!dep) { throw new Error('No dependency defined'); }
+    let deps = parseDependencies(dep);
+    this._killOrphans(this._findOrphans(dep)); // Die bastards. Die
+    let modifiedDeps = _.reduce(dep.targets, function (res, target) {
+      return _.union(res, this._buildDependencyList(deps, target, dep.cwd));
+    }, [], this);
+    this._hub.emit(constants.deps.MULTIPLE_DEPENDENCY_CHANGED, modifiedDeps);
+  }
+
+  removeTarget(path) {
+    if (!path) { throw new Error('No target defined'); }
+    let hasRemoved = false;
+    _.each(this._dependencies, function (val, key) {
+      if (key === path || val.removeTarget(path)) {
+        hasRemoved = true;
+        this._deleteDependency(key);
+      }
+    }, this);
+    if (hasRemoved) {
+      this._hub.emit(constants.deps.DEPENDENCY_UNWATCH, path);
+    }
   }
 }
 
-function addTarget (payload) {
-  let path         = getFullPath(payload);
-  let deps         = parseDependencies(payload);
-  let dependencies = buildDependencyList(deps, path, payload.cwd);
-  hub.emit(constants.deps.MULTIPLE_DEPENDENCY_ADDED, dependencies);
-}
-
-function isOrphan (potentialOrphan) {
-  let orphanModel = data.dependencies[potentialOrphan];
-  // Orphan has only one target and we know that target.
-  return orphanModel.targets.length === 1;
-}
-
-function findOrphans (dependency) {
-  const cwd = dependency.cwd;
-  // Go through dependency targets to see if those targets
-  // have dropped any of their dependencies
-  return _.reduce(dependency.targets, function (result, target) {
-    // Update dependency list for the target itself
-    let deps = parseDependencies({ cwd  : cwd, path : target });
-    // Get the list of dropped dependencies.
-    // Cache represents old dependencies, if this list is longer then we have a issue
-    let excluded = getExcluded(data.cache[target], deps);
-    data.cache[target] = deps;
-    // All deps are the same
-    if (!excluded.length) { return result; }
-    return _.union(result, _.filter(excluded, isOrphan));
-  }, []);
-}
-
-function killOrphans (orphans) {
-  if (orphans.length) {
-    _.each(orphans, deleteDependency);
-    hub.emit(constants.deps.MULTIPLE_DEPENDENCY_UNWATCH, orphans);
-  }
-}
-
-function changeDependency (dep) {
-  let deps = parseDependencies(dep);
-  killOrphans(findOrphans(dep)); // Die bastards. Die
-  let modifiedDeps = _.reduce(dep.targets, function (res, target) {
-    return _.union(res, buildDependencyList(deps, target, dep.cwd));
-  }, []);
-  hub.emit(constants.deps.MULTIPLE_DEPENDENCY_CHANGED, modifiedDeps);
-}
-
-function removeDependency (dep) {
-  if (dep.isTarget()) { return; }
-  let deps = _.map(dep.targets, function (target) {
-    return data.dependencies[target];
-  });
-  hub.emit(constants.deps.MULTIPLE_DENENDENCY_DIRTY, deps);
-}
-
-exports.getDependencies = function () {
-  return data.dependencies;
-};
-
-exports.clear = function () {
-  data.dependencies = {};
-};
-
-exports._registerEvents = function () {
-  hub.on(constants.target.TARGET_ADDED, validatePayload(addTarget));
-  hub.on(constants.target.TARGET_REMOVED, validatePayload(removeTarget));
-  hub.on(constants.watcher.DEPENDENCY_FILE_CHANGED, validatePayload(changeDependency));
-  hub.on(constants.watcher.DEPENDENCY_FILE_UNLINK, validatePayload(removeDependency));
-};
+module.exports = DependenciesStore;

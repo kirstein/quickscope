@@ -4,6 +4,7 @@ const EventEmitter = require('events').EventEmitter;
 const path         = require('path');
 const _            = require('lodash');
 
+// Initiating stores
 const hub       = require('./event-hub');
 const spawn     = require('./lib/spawn');
 const constants = {
@@ -13,6 +14,9 @@ const constants = {
   quickscope : require('./constants/quickscope-constants')
 };
 
+const DependenciesStore = require('./stores/dependency-store');
+const WatchersStore     = require('./stores/watchers-store');
+
 function buildCmd (cmd, targets) {
   return cmd + ' ' + targets.join(' ');
 }
@@ -20,10 +24,15 @@ function buildCmd (cmd, targets) {
 class Runner extends EventEmitter {
   constructor(cmd, cwd, watcher) {
     super();
-    this.cmd      = cmd;
-    this.cwd      = cwd;
-    this.watcher  = watcher;
-    this._targets = [];
+    this.cmd     = cmd;
+    this.cwd     = cwd;
+    this.watcher = watcher;
+
+    this._hub           = new EventEmitter();
+    this._depStore      = new DependenciesStore(hub);
+    this._watchersStore = new WatchersStore(hub);
+    this._targets       = [];
+
     this._addListeners();
   }
 
