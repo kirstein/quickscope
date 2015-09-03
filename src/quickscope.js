@@ -1,8 +1,9 @@
 'use strict';
 
-const events = require('events');
-const path   = require('path');
-const _      = require('lodash');
+const events   = require('events');
+const path     = require('path');
+const _        = require('lodash');
+const chokidar = require('chokidar');
 
 const spawn     = require('./lib/spawn');
 const constants = {
@@ -15,16 +16,30 @@ const constants = {
 const DependenciesStore = require('./stores/dependency-store');
 const WatchersStore     = require('./stores/watchers-store');
 
+const DEFAULT_OPTS = {
+  persistent: true,
+  alwaysStat: false,
+  followSymlinks: true,
+  cwd: process.cwd()
+};
+
 function buildCmd (cmd, targets) {
   return cmd + ' ' + targets.join(' ');
 }
 
+function buildWatcher (glob, opts) {
+  return chokidar.watch(glob, opts);
+}
+
 class Quickscope extends events.EventEmitter {
-  constructor (cmd, cwd, watcher) {
+  constructor (cmd, glob, opts) {
+    if (!cmd) { throw new Error('No cmd defined'); }
+    if (!glob) { throw new Error('No glob defined'); }
+    opts = _.assign({}, DEFAULT_OPTS, opts);
     super();
     this.cmd      = cmd;
-    this.cwd      = cwd;
-    this.watcher  = watcher;
+    this.cwd      = opts.cwd;
+    this._watcher = buildWatcher(glob, opts);
     this._hub     = new events.EventEmitter();
     this._targets = [];
     this._initStores();
@@ -38,9 +53,9 @@ class Quickscope extends events.EventEmitter {
   }
 
   _addWatcherListeners () {
-    this.watcher.on('add', this.addTarget.bind(this));
-    this.watcher.on('ready', this._triggerReady.bind(this));
-    this.watcher.on('unlink', this.unlinkTarget.bind(this));
+    this._watcher.on('add', this.addTarget.bind(this));
+    this._watcher.on('ready', this._triggerReady.bind(this));
+    this._watcher.on('unlink', this.unlinkTarget.bind(this));
   }
 
   _addHubListeners () {
@@ -90,4 +105,5 @@ class Quickscope extends events.EventEmitter {
   }
 }
 
+Quickscope.DEFAULT_OPTS = DEFAULT_OPTS;
 module.exports = Quickscope;
