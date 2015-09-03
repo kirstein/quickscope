@@ -7,7 +7,7 @@ const argv       = require('minimist')(process.argv.slice(2));
 const path       = require('path');
 const findRoot   = require('find-project-root');
 const Spinner    = require('cli-spinner').Spinner;
-const quickscope = require('../src/index');
+const Quickscope = require('../src/quickscope');
 const root       = findRoot(process.cwd(), {
   markers: findRoot.MARKERS.concat('package.json')
 });
@@ -41,7 +41,7 @@ let watching = new Spinner('%s waiting for changes...');
 watching.setSpinnerString('|/-\\');
 
 let isReady = false;
-let qs      = quickscope(cfg.files, cfg.cmd, { cwd: root });
+let qs      = new Quickscope(cfg.cmd, cfg.files, { cwd: root });
 qs.on('ready', function (files) {
   isReady = true;
   showWelcome(files);

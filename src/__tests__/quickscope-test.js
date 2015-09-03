@@ -22,13 +22,21 @@ function nthCall(nr, mock) {
 
 function createMockHub () {
   return {
-    on: jasmine.createSpy(),
-    emit: jasmine.createSpy()
+    on   : jasmine.createSpy(),
+    emit : jasmine.createSpy()
   };
 }
 describe('Quickscope', function() {
   beforeEach(function() {
     spawn.mockClear();
+    spyOn(chokidar, 'watch').andCallFake(function() {
+      return {
+        on: function (evt, cb) {
+          if (evt === 'add') { this.addCb = cb; }
+          if (evt === 'ready') { this.readyCb = cb; }
+        }.bind(this)
+      };
+    }.bind(this));
     spyOn(events, 'EventEmitter').andCallFake(function () {
       this.hub = createMockHub();
       return this.hub;
@@ -39,9 +47,28 @@ describe('Quickscope', function() {
     assert(Quickscope);
   });
 
+  it('should have default opts', function() {
+    assert(Quickscope.DEFAULT_OPTS);
+  });
+
   describe('initiation', function() {
+    it('should throw if no cmd is defined', function() {
+      assert.throws(function() {
+        new Quickscope();
+      }, /No cmd/);
+    });
+
+    it('should throw if no glob exists', function() {
+      assert.throws(function() {
+        new Quickscope('asd');
+      }, /No glob/);
+
+    });
+  });
+
+  describe('event subscribing', function() {
     beforeEach(function() {
-      this.qs = new Quickscope('cmd', 'cwd', chokidar.watch());
+      this.qs = new Quickscope('cmd', 'glob', {});
     });
 
     it('should subscribe to event hub dependency changed event', function() {
@@ -55,11 +82,7 @@ describe('Quickscope', function() {
     describe('ready event', function() {
       beforeEach(function() {
         this.runner = chokidar.watch();
-        spyOn(this.runner, 'on').andCallFake(function(evt, cb) {
-          if (evt === 'add') { this.addCb = cb; }
-          if (evt === 'ready') { this.readyCb = cb; }
-        }.bind(this));
-        this.qs = new Quickscope('cmd', 'cwd', this.runner);
+        this.qs = new Quickscope('cmd', 'glob', { cwd: 'cwd' });
       });
 
       it('should trigger ready if chokidar has triggered ready event', function() {
@@ -82,7 +105,7 @@ describe('Quickscope', function() {
 
   describe('#addTarget', function() {
     beforeEach(function() {
-      this.qs = new Quickscope('cmd', 'cwd', chokidar.watch());
+      this.qs = new Quickscope('cmd', 'glob', { cwd: 'cwd' });
     });
 
     it('should exist', function() {
@@ -117,7 +140,7 @@ describe('Quickscope', function() {
 
   describe('#unlinkTarget', function() {
     beforeEach(function() {
-      this.qs = new Quickscope('cmd', 'cwd', chokidar.watch());
+      this.qs = new Quickscope('cmd', 'glob', { cwd: 'cwd' });
     });
 
     it('should exist', function() {
@@ -155,7 +178,7 @@ describe('Quickscope', function() {
       spawn.mockImplementation(function () {
         return { on: function(evt, cb) { cb(); }.bind(this) };
       }.bind(this));
-      this.qs = new Quickscope('cmd', 'cwd', chokidar.watch());
+      this.qs = new Quickscope('cmd', 'glob', { cwd: 'cwd' });
     });
 
     it('should exists', function() {
