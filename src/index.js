@@ -5,9 +5,6 @@ const _         = require('lodash');
 
 const Quickscope = require('./quickscope');
 
-// Initiating stores
-require('./stores/dependency-store')._registerEvents();
-require('./stores/watchers-store')._registerEvents();
 
 const DEFAULT_OPTS = {
   persistent: true,

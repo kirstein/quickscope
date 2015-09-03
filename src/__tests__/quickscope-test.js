@@ -7,20 +7,32 @@ jest.dontMock('lodash');
 
 const Quickscope = require('../quickscope');
 const spawn      = require('../lib/spawn');
-const hub        = require('../event-hub');
 const chokidar   = require('chokidar');
-const constants = {
+const events     = require('events');
+const constants  = {
   watcher    : require('../constants/watcher-constants'),
   target     : require('../constants/target-constants'),
   deps       : require('../constants/dependency-constants'),
   quickscope : require('../constants/quickscope-constants')
 };
 
+function nthCall(nr, mock) {
+  return mock.argsForCall[nr];
+}
+
+function createMockHub () {
+  return {
+    on: jasmine.createSpy(),
+    emit: jasmine.createSpy()
+  };
+}
 describe('Quickscope', function() {
   beforeEach(function() {
-    hub.on.mockClear();
-    hub.emit.mockClear();
     spawn.mockClear();
+    spyOn(events, 'EventEmitter').andCallFake(function () {
+      this.hub = createMockHub();
+      return this.hub;
+    }.bind(this));
   });
 
   it('should exist', function() {
@@ -28,13 +40,16 @@ describe('Quickscope', function() {
   });
 
   describe('initiation', function() {
-    it('should subscribe to event hub dependency changed event', function() {
-      new Quickscope('cmd', 'cwd', chokidar.watch());
-      assert.strictEqual(hub.on.mock.calls[0][0], constants.watcher.DEPENDENCY_FILE_CHANGED);
+    beforeEach(function() {
+      this.qs = new Quickscope('cmd', 'cwd', chokidar.watch());
     });
+
+    it('should subscribe to event hub dependency changed event', function() {
+      assert.strictEqual(nthCall(0, this.hub.on)[0], constants.watcher.DEPENDENCY_FILE_CHANGED);
+    });
+
     it('should subscribe to event hub multiple dependency dirty event', function() {
-      new Quickscope('cmd', 'cwd', chokidar.watch());
-      assert.strictEqual(hub.on.mock.calls[1][0], constants.deps.MULTIPLE_DENENDENCY_DIRTY);
+      assert.strictEqual(nthCall(1, this.hub.on)[0], constants.deps.MULTIPLE_DENENDENCY_DIRTY);
     });
 
     describe('ready event', function() {
@@ -44,19 +59,18 @@ describe('Quickscope', function() {
           if (evt === 'add') { this.addCb = cb; }
           if (evt === 'ready') { this.readyCb = cb; }
         }.bind(this));
+        this.qs = new Quickscope('cmd', 'cwd', this.runner);
       });
 
       it('should trigger ready if chokidar has triggered ready event', function() {
-        let qs = new Quickscope('cmd', 'cwd', this.runner);
-        qs.on(constants.quickscope.QUICKSCOPE_READY, function () {
+        this.qs.on(constants.quickscope.QUICKSCOPE_READY, function () {
           assert(true);
         });
         this.readyCb();
       });
 
       it('should add watching files as params', function() {
-        let qs = new Quickscope('cmd', 'cwd', this.runner);
-        qs.on(constants.quickscope.QUICKSCOPE_READY, function (files) {
+        this.qs.on(constants.quickscope.QUICKSCOPE_READY, function (files) {
           assert.strictEqual(files.length, 1);
           assert.strictEqual(files[0], 'kala');
         });
@@ -83,12 +97,12 @@ describe('Quickscope', function() {
 
     it('should emit file added event', function() {
       this.qs.addTarget('test');
-      assert.strictEqual(hub.emit.mock.calls[0][0], constants.target.TARGET_ADDED);
+      assert.strictEqual(nthCall(0, this.hub.emit)[0], constants.target.TARGET_ADDED);
     });
 
     it('should add the correct payload to file added event', function() {
       this.qs.addTarget('target');
-      let payload = hub.emit.mock.calls[0][1];
+      let payload = nthCall(0, this.hub.emit)[1];
       assert.strictEqual(payload.cwd, 'cwd');
       assert.strictEqual(payload.path, 'target');
     });
@@ -118,12 +132,12 @@ describe('Quickscope', function() {
 
     it('should emit file removed event', function() {
       this.qs.unlinkTarget('test');
-      assert.strictEqual(hub.emit.mock.calls[0][0], constants.target.TARGET_REMOVED);
+      assert.strictEqual(nthCall(0, this.hub.emit)[0], constants.target.TARGET_REMOVED);
     });
 
     it('should add the correct payload to file added event', function() {
       this.qs.unlinkTarget('target');
-      let payload = hub.emit.mock.calls[0][1];
+      let payload = nthCall(0, this.hub.emit)[1];
       assert.strictEqual(payload, 'cwd/target');
     });
 
@@ -138,11 +152,8 @@ describe('Quickscope', function() {
 
   describe('#triggerCmd', function() {
     beforeEach(function() {
-
       spawn.mockImplementation(function () {
-        return {
-          on: function(evt, cb) { cb(); }.bind(this)
-        };
+        return { on: function(evt, cb) { cb(); }.bind(this) };
       }.bind(this));
       this.qs = new Quickscope('cmd', 'cwd', chokidar.watch());
     });
@@ -158,9 +169,7 @@ describe('Quickscope', function() {
     });
 
     it('should run spawn', function() {
-      this.qs.triggerCmd({
-        targets: [ 'x', 'z' ]
-      });
+      this.qs.triggerCmd({ targets: [ 'x', 'z' ] });
       assert(spawn.mock.calls[0]);
     });
 
@@ -177,9 +186,7 @@ describe('Quickscope', function() {
 
     it('should pass done fn to run cmd that shows if the command has finished', function() {
       this.qs.on(constants.quickscope.QUICKSCOPE_RUN, function(targets, done) {
-        done(function() {
-          assert(true);
-        });
+        done(function() { assert(true); });
       });
       this.qs.triggerCmd({
         targets: [ 'x', 'z' ]
