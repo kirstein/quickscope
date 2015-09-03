@@ -1,11 +1,9 @@
 'use strict';
 
-const EventEmitter = require('events').EventEmitter;
-const path         = require('path');
-const _            = require('lodash');
+const events = require('events');
+const path   = require('path');
+const _      = require('lodash');
 
-// Initiating stores
-const hub       = require('./event-hub');
 const spawn     = require('./lib/spawn');
 const constants = {
   watcher    : require('./constants/watcher-constants'),
@@ -21,55 +19,61 @@ function buildCmd (cmd, targets) {
   return cmd + ' ' + targets.join(' ');
 }
 
-class Runner extends EventEmitter {
-  constructor(cmd, cwd, watcher) {
+class Quickscope extends events.EventEmitter {
+  constructor (cmd, cwd, watcher) {
     super();
-    this.cmd     = cmd;
-    this.cwd     = cwd;
-    this.watcher = watcher;
-
-    this._hub           = new EventEmitter();
-    this._depStore      = new DependenciesStore(hub);
-    this._watchersStore = new WatchersStore(hub);
-    this._targets       = [];
-
-    this._addListeners();
+    this.cmd      = cmd;
+    this.cwd      = cwd;
+    this.watcher  = watcher;
+    this._hub     = new events.EventEmitter();
+    this._targets = [];
+    this._initStores();
+    this._addHubListeners();
+    this._addWatcherListeners();
   }
 
-  _addListeners() {
+  _initStores () {
+    this._depStore      = new DependenciesStore(this._hub);
+    this._watchersStore = new WatchersStore(this._hub);
+  }
+
+  _addWatcherListeners () {
     this.watcher.on('add', this.addTarget.bind(this));
     this.watcher.on('ready', this._triggerReady.bind(this));
     this.watcher.on('unlink', this.unlinkTarget.bind(this));
-    hub.on(constants.watcher.DEPENDENCY_FILE_CHANGED, this.triggerCmd.bind(this));
-    hub.on(constants.deps.MULTIPLE_DENENDENCY_DIRTY, this.triggerCmd.bind(this));
   }
 
-  _triggerReady() {
+  _addHubListeners () {
+    this._hub.on(constants.watcher.DEPENDENCY_FILE_CHANGED, this.triggerCmd.bind(this));
+    this._hub.on(constants.deps.MULTIPLE_DENENDENCY_DIRTY, this.triggerCmd.bind(this));
+  }
+
+  _triggerReady () {
     this.emit(constants.quickscope.QUICKSCOPE_READY, this._targets);
   }
 
-  addTarget(target) {
+  addTarget (target) {
     if (!target) {
       throw new Error('No target defined');
     }
     this._targets.push(target);
-    this.emit(constants.quickscope.QUICKSCOPE_TARGET_ADD, target);
-    hub.emit(constants.target.TARGET_ADDED, {
+    this._hub.emit(constants.target.TARGET_ADDED, {
       path: target,
       cwd : this.cwd
     });
+    this.emit(constants.quickscope.QUICKSCOPE_TARGET_ADD, target);
   }
 
-  unlinkTarget(target) {
+  unlinkTarget (target) {
     if (!target) {
       throw new Error('No target defined');
     }
     this._targets = _.without(this._targets, target);
+    this._hub.emit(constants.target.TARGET_REMOVED, path.join(this.cwd, target));
     this.emit(constants.quickscope.QUICKSCOPE_TARGET_UNLINK, target);
-    hub.emit(constants.target.TARGET_REMOVED, path.join(this.cwd, target));
   }
 
-  triggerCmd(dependency) {
+  triggerCmd (dependency) {
     if (!dependency) {
       throw new Error('No dependency given');
     }
@@ -86,4 +90,4 @@ class Runner extends EventEmitter {
   }
 }
 
-module.exports = Runner;
+module.exports = Quickscope;
