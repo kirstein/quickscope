@@ -39,12 +39,11 @@ class Quickscope extends events.EventEmitter {
     super();
     this.cmd      = cmd;
     this.cwd      = opts.cwd;
-    this._watcher = buildWatcher(glob, opts);
     this._hub     = new events.EventEmitter();
     this._targets = [];
     this._initStores();
     this._addHubListeners();
-    this._addWatcherListeners();
+    this._addWatcherListeners(buildWatcher(glob, opts));
   }
 
   _initStores () {
@@ -52,10 +51,10 @@ class Quickscope extends events.EventEmitter {
     this._watchersStore = new WatchersStore(this._hub);
   }
 
-  _addWatcherListeners () {
-    this._watcher.on('add', this.addTarget.bind(this));
-    this._watcher.on('ready', this._triggerReady.bind(this));
-    this._watcher.on('unlink', this.unlinkTarget.bind(this));
+  _addWatcherListeners (watcher) {
+    watcher.on('add', this.addTarget.bind(this));
+    watcher.on('ready', this._triggerReady.bind(this));
+    watcher.on('unlink', this.unlinkTarget.bind(this));
   }
 
   _addHubListeners () {
