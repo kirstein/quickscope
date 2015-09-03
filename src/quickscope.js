@@ -68,9 +68,7 @@ class Quickscope extends events.EventEmitter {
   }
 
   addTarget (target) {
-    if (!target) {
-      throw new Error('No target defined');
-    }
+    if (!target) { throw new Error('No target defined'); }
     this._targets.push(target);
     this._hub.emit(constants.target.TARGET_ADDED, {
       path: target,
@@ -80,18 +78,14 @@ class Quickscope extends events.EventEmitter {
   }
 
   unlinkTarget (target) {
-    if (!target) {
-      throw new Error('No target defined');
-    }
+    if (!target) { throw new Error('No target defined'); }
     this._targets = _.without(this._targets, target);
     this._hub.emit(constants.target.TARGET_REMOVED, path.join(this.cwd, target));
     this.emit(constants.quickscope.QUICKSCOPE_TARGET_UNLINK, target);
   }
 
   triggerCmd (dependency) {
-    if (!dependency) {
-      throw new Error('No dependency given');
-    }
+    if (!dependency) { throw new Error('No dependency given'); }
     let targets = dependency.targets || _.reduce(dependency, function (res, dep) {
       return _.union(res, dep.targets);
     }, []);
