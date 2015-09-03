@@ -1,4 +1,0 @@
-{
-  "files": "src/**/__tests__/**/**.js",
-  "cmd": "jest"
-}
