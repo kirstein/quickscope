@@ -272,10 +272,28 @@ describe('Quickscope', function() {
 
     it('should emit target change event', function() {
       let dependency = new Dependency('path', 'cwd');
-      this.qs.on(constants.quickscope.QUICKSCOPE_DEP_CHANGE, function(dep) {
-        assert.strictEqual(dep, dependency);
+      let spy = jasmine.createSpy();
+      this.qs.on(constants.quickscope.QUICKSCOPE_DEP_CHANGE, spy);
+      this.qs.changeDependency(dependency);
+      assert(spy.wasCalled);
+    });
+
+    it('should emit target change event', function() {
+      let dependency = new Dependency('path', 'cwd');
+      this.qs.on(constants.quickscope.QUICKSCOPE_DEP_CHANGE, function (targets) {
+        assert.strictEqual(targets[0], dependency);
       });
       this.qs.changeDependency(dependency);
+    });
+
+    it('should emit target change event if there are multiple targets', function() {
+      let dependency  = new Dependency('path', 'cwd');
+      let dependency1 = new Dependency('path1', 'cwd');
+      this.qs.on(constants.quickscope.QUICKSCOPE_DEP_CHANGE, function (targets) {
+        assert.strictEqual(targets[0], dependency);
+        assert.strictEqual(targets[1], dependency1);
+      });
+      this.qs.changeDependency([dependency, dependency1]);
     });
   });
 });
