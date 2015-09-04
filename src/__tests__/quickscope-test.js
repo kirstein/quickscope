@@ -6,6 +6,7 @@ jest.dontMock('../quickscope');
 jest.dontMock('lodash');
 
 const Quickscope = require('../quickscope');
+const Dependency = require('../models/dependency');
 const spawn      = require('../lib/spawn');
 const chokidar   = require('chokidar');
 const events     = require('events');
@@ -251,6 +252,30 @@ describe('Quickscope', function() {
           targets: [ 'yy', 'ab']
         }]);
       });
+    });
+  });
+
+  describe('#changeDependency', function() {
+    beforeEach(function() {
+      this.qs = new Quickscope('cmd', 'glob', { cwd: 'cwd' });
+    });
+
+    it('should exist', function() {
+      assert(this.qs.changeDependency);
+    });
+
+    it('should throw if dependency it not defined', function() {
+      assert.throws(function() {
+        this.qs.changeDependency();
+      }.bind(this), /Dependency not defined/);
+    });
+
+    it('should emit target change event', function() {
+      let dependency = new Dependency('path', 'cwd');
+      this.qs.on(constants.quickscope.QUICKSCOPE_DEP_CHANGE, function(dep) {
+        assert.strictEqual(dep, dependency);
+      });
+      this.qs.changeDependency(dependency);
     });
   });
 });
