@@ -5,7 +5,6 @@ const path     = require('path');
 const _        = require('lodash');
 const chokidar = require('chokidar');
 
-const spawn     = require('./lib/spawn');
 const constants = {
   watcher    : require('./constants/watcher-constants'),
   target     : require('./constants/target-constants'),
@@ -23,21 +22,15 @@ const DEFAULT_OPTS = {
   cwd: process.cwd()
 };
 
-function buildCmd (cmd, targets) {
-  return cmd + ' ' + targets.join(' ');
-}
-
 function buildWatcher (glob, opts) {
   return chokidar.watch(glob, opts);
 }
 
 class Quickscope extends events.EventEmitter {
-  constructor (cmd, glob, opts) {
-    if (!cmd) { throw new Error('No cmd defined'); }
+  constructor (glob, opts) {
     if (!glob) { throw new Error('No glob defined'); }
     opts = _.assign({}, DEFAULT_OPTS, opts);
     super();
-    this.cmd      = cmd;
     this.cwd      = opts.cwd;
     this._hub     = new events.EventEmitter();
     this._targets = [];
@@ -58,8 +51,8 @@ class Quickscope extends events.EventEmitter {
   }
 
   _addHubListeners () {
-    this._hub.on(constants.watcher.DEPENDENCY_FILE_CHANGED, this.triggerCmd.bind(this));
-    this._hub.on(constants.deps.MULTIPLE_DENENDENCY_DIRTY, this.triggerCmd.bind(this));
+    this._hub.on(constants.watcher.DEPENDENCY_FILE_CHANGED, this.changeDependency.bind(this));
+    this._hub.on(constants.deps.MULTIPLE_DENENDENCY_DIRTY, this.changeDependency.bind(this));
   }
 
   _triggerReady () {
@@ -86,20 +79,6 @@ class Quickscope extends events.EventEmitter {
   changeDependency (dep) {
     if (!dep) { throw new Error('Dependency not defined'); }
     this.emit(constants.quickscope.QUICKSCOPE_DEP_CHANGE, [].concat(dep));
-  }
-
-  triggerCmd (dependency) {
-    if (!dependency) { throw new Error('No dependency given'); }
-    let targets = dependency.targets || _.reduce(dependency, function (res, dep) {
-      return _.union(res, dep.targets);
-    }, []);
-    let doneFn;
-    this.emit(constants.quickscope.QUICKSCOPE_RUN, targets, function (fn) {
-      doneFn = fn;
-    });
-    spawn(buildCmd(this.cmd, targets), this.cwd).on('close', function (code) {
-      if (doneFn) { doneFn(code); }
-    });
   }
 }
 

@@ -12,6 +12,7 @@ const root       = findRoot(process.cwd(), {
   markers: findRoot.MARKERS.concat('package.json')
 });
 
+const spawn = require('../src/lib/spawn');
 const GHETTO_TAB = '  ';
 
 function getCfg () {
@@ -21,6 +22,10 @@ function getCfg () {
     return conf.config.quickscope;
   }
   return conf;
+}
+
+function buildCmd (cmd, targets) {
+  return cmd + ' ' + targets.join(' ');
 }
 
 function showWelcome (files) {
@@ -41,7 +46,7 @@ let watching = new Spinner('%s waiting for changes...');
 watching.setSpinnerString('|/-\\');
 
 let isReady = false;
-let qs      = new Quickscope(cfg.cmd, cfg.files, { cwd: root });
+let qs      = new Quickscope(cfg.files, { cwd: root });
 qs.on('ready', function (files) {
   isReady = true;
   showWelcome(files);
@@ -57,10 +62,13 @@ qs.on('unlink', function (file) {
   console.log(fileChange('Unlinked file:', file));
 });
 
-qs.on('run', function (files, done) {
-  console.log(fileChange('Testing:', files.join()));
+qs.on('change', function (deps) {
   watching.stop();
-  done(function () {
+  let targets = deps.targets || _.reduce(deps, function (res, dep) {
+    return _.union(res, dep.targets);
+  }, []);
+  console.log(fileChange('Testing:', targets.join()));
+  spawn(buildCmd(cfg.cmd, targets), targets[0].cwd).on('close', function () {
     watching.start();
   });
 });

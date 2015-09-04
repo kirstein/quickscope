@@ -7,7 +7,6 @@ jest.dontMock('lodash');
 
 const Quickscope = require('../quickscope');
 const Dependency = require('../models/dependency');
-const spawn      = require('../lib/spawn');
 const chokidar   = require('chokidar');
 const events     = require('events');
 const constants  = {
@@ -29,7 +28,6 @@ function createMockHub () {
 }
 describe('Quickscope', function() {
   beforeEach(function() {
-    spawn.mockClear();
     spyOn(chokidar, 'watch').andCallFake(function() {
       return {
         on: function (evt, cb) {
@@ -53,23 +51,16 @@ describe('Quickscope', function() {
   });
 
   describe('initiation', function() {
-    it('should throw if no cmd is defined', function() {
-      assert.throws(function() {
-        new Quickscope();
-      }, /No cmd/);
-    });
-
     it('should throw if no glob exists', function() {
       assert.throws(function() {
-        new Quickscope('asd');
+        new Quickscope();
       }, /No glob/);
-
     });
   });
 
   describe('event subscribing', function() {
     beforeEach(function() {
-      this.qs = new Quickscope('cmd', 'glob', {});
+      this.qs = new Quickscope('glob', {});
     });
 
     it('should subscribe to event hub dependency changed event', function() {
@@ -83,7 +74,7 @@ describe('Quickscope', function() {
     describe('ready event', function() {
       beforeEach(function() {
         this.runner = chokidar.watch();
-        this.qs = new Quickscope('cmd', 'glob', { cwd: 'cwd' });
+        this.qs = new Quickscope('glob', { cwd: 'cwd' });
       });
 
       it('should trigger ready if chokidar has triggered ready event', function() {
@@ -106,7 +97,7 @@ describe('Quickscope', function() {
 
   describe('#addTarget', function() {
     beforeEach(function() {
-      this.qs = new Quickscope('cmd', 'glob', { cwd: 'cwd' });
+      this.qs = new Quickscope('glob', { cwd: 'cwd' });
     });
 
     it('should exist', function() {
@@ -141,7 +132,7 @@ describe('Quickscope', function() {
 
   describe('#unlinkTarget', function() {
     beforeEach(function() {
-      this.qs = new Quickscope('cmd', 'glob', { cwd: 'cwd' });
+      this.qs = new Quickscope('glob', { cwd: 'cwd' });
     });
 
     it('should exist', function() {
@@ -171,93 +162,11 @@ describe('Quickscope', function() {
       });
       this.qs.unlinkTarget('target');
     });
-
-  });
-
-  describe('#triggerCmd', function() {
-    beforeEach(function() {
-      spawn.mockImplementation(function () {
-        return { on: function(evt, cb) { cb(); }.bind(this) };
-      }.bind(this));
-      this.qs = new Quickscope('cmd', 'glob', { cwd: 'cwd' });
-    });
-
-    it('should exists', function() {
-      assert(this.qs.triggerCmd);
-    });
-
-    it('should throw if no dependency is given', function() {
-      assert.throws(function() {
-        this.qs.triggerCmd();
-      }.bind(this), /dependency/);
-    });
-
-    it('should run spawn', function() {
-      this.qs.triggerCmd({ targets: [ 'x', 'z' ] });
-      assert(spawn.mock.calls[0]);
-    });
-
-    it('should trigger run event', function() {
-      this.qs.on(constants.quickscope.QUICKSCOPE_RUN, function(targets) {
-        assert.strictEqual(targets.length, 2);
-        assert.strictEqual(targets[0], 'x');
-        assert.strictEqual(targets[1], 'z');
-      });
-      this.qs.triggerCmd({
-        targets: [ 'x', 'z' ]
-      });
-    });
-
-    it('should pass done fn to run cmd that shows if the command has finished', function() {
-      this.qs.on(constants.quickscope.QUICKSCOPE_RUN, function(targets, done) {
-        done(function() { assert(true); });
-      });
-      this.qs.triggerCmd({
-        targets: [ 'x', 'z' ]
-      });
-    });
-
-    it('should pass spawn cmd and cwd', function() {
-      this.qs.triggerCmd({
-        targets: [ 'x', 'z' ]
-      });
-      let call = spawn.mock.calls[0];
-      let cmd  = call[0];
-      let cwd  = call[1];
-      assert.strictEqual(cmd, 'cmd x z');
-      assert.strictEqual(cwd, 'cwd');
-    });
-
-    describe('multiple dependencies', function() {
-      it('should run spawn with all given targets', function() {
-        this.qs.triggerCmd([{
-          targets: [ 'x', 'z' ]
-        }, {
-          targets: [ 'yy', 'ab']
-        }]);
-        let call = spawn.mock.calls[0];
-        let cmd  = call[0];
-        let cwd  = call[1];
-        assert.strictEqual(cmd, 'cmd x z yy ab');
-        assert.strictEqual(cwd, 'cwd');
-      });
-
-      it('should trigger run event', function() {
-        this.qs.on(constants.quickscope.QUICKSCOPE_RUN, function(targets) {
-          assert.strictEqual(targets.length, 4);
-        });
-        this.qs.triggerCmd([{
-          targets: [ 'x', 'z' ]
-        }, {
-          targets: [ 'yy', 'ab']
-        }]);
-      });
-    });
   });
 
   describe('#changeDependency', function() {
     beforeEach(function() {
-      this.qs = new Quickscope('cmd', 'glob', { cwd: 'cwd' });
+      this.qs = new Quickscope('glob', { cwd: 'cwd' });
     });
 
     it('should exist', function() {
