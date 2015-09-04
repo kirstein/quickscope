@@ -85,7 +85,7 @@ class Quickscope extends events.EventEmitter {
 
   changeDependency (dep) {
     if (!dep) { throw new Error('Dependency not defined'); }
-    this.emit(constants.quickscope, constants.quickscope.QUICKSCOPE_DEP_CHANGE, dep);
+    this.emit(constants.quickscope.QUICKSCOPE_DEP_CHANGE, [].concat(dep));
   }
 
   triggerCmd (dependency) {
