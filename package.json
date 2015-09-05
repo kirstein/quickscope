@@ -6,9 +6,6 @@
     "test": "./node_modules/jest-cli/bin/jest.js",
     "watch": "quickscope"
   },
-  "bin": {
-    "quickscope": "./bin/quickscope-cli.js"
-  },
   "repository": {
     "type": "git",
     "url": "git@github.com:kirstein/quickscope.git"
