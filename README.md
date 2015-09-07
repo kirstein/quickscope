@@ -44,7 +44,7 @@ returns `quickscope` instance
 ### Example
 
 ```javascript
-let quickscope = new Quickscope(**/__tests__/*.js)});
+let quickscope = new Quickscope('**/__tests__/*.js');
 
 quickscope.on('ready', function (files) {
   console.log('ready with targets', files);
