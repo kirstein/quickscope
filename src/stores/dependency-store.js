@@ -27,7 +27,10 @@ const constants  = {
 // d - [ C ]
 // e - [ Y ]
 function parseDependencies (payload) {
-  return dTree.toList(payload.path, payload.cwd);
+  return dTree.toList({
+    filename: payload.path,
+    root: payload.cwd
+  });
 }
 
 function getFullPath (payload) {
