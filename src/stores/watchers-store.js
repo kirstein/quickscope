@@ -38,18 +38,14 @@ class DependenciesStore {
   }
 
   unwatch (path) {
-    console.log('unwatching', path);
     let dep = this._data[path];
-    console.log(this._data);
     // Seems that we do not have a target to unwatch
     if (!dep) { return; }
-    console.log('triggering close');
     dep.watcher.close();
     delete this._data[path];
   }
 
   addMultipleIfNeeded (deps) {
-    console.log('asd', this._data);
     _.each(deps, (dependency) => {
       let path = dependency.path;
       // That path is already added.
