@@ -2,6 +2,7 @@
 
 const assert = require('assert');
 
+jest.enableAutomock();
 jest.dontMock('../watchers-store');
 jest.dontMock('lodash');
 
@@ -22,7 +23,7 @@ function onNthCall (count, fn) {
 }
 
 function nthCall(nr, mock) {
-  return mock.argsForCall[nr];
+  return mock.calls.argsFor(nr);
 }
 
 function createMockHub () {
@@ -71,13 +72,13 @@ describe('watcher store', function() {
     });
 
     it('should subscribe to dependency change with correct path', function() {
-      spyOn(chokidar, 'watch').andCallThrough();
+      spyOn(chokidar, 'watch').and.callThrough();
       this.store.addMultipleIfNeeded([ { path: 'xxx', targets: [ 'xx' ] }]);
-      assert.strictEqual(chokidar.watch.mostRecentCall.args[0], 'xxx');
+      assert.strictEqual(chokidar.watch.calls.mostRecent().args[0], 'xxx');
     });
 
     it('should watch for change event', function() {
-      spyOn(chokidar, 'watch').andReturn({
+      spyOn(chokidar, 'watch').and.returnValue({
         on: onNthCall(1, function(evt) {
           assert.strictEqual(evt, 'change');
         })
@@ -87,7 +88,7 @@ describe('watcher store', function() {
 
     it('should trigger dependency changed event if file changes', function() {
       let mockCb;
-      spyOn(chokidar, 'watch').andReturn({
+      spyOn(chokidar, 'watch').and.returnValue({
         on: onNthCall(1, function(evt, cb) { mockCb = cb; })
       });
       this.store.addMultipleIfNeeded([ { path: 'xxx', targets: [ 'xx' ] }]);
@@ -97,7 +98,7 @@ describe('watcher store', function() {
 
     it('should trigger dependency changed event if file unlinks', function() {
       let mockCb;
-      spyOn(chokidar, 'watch').andReturn({
+      spyOn(chokidar, 'watch').and.returnValue({
         on: onNthCall(2, function(evt, cb) { mockCb = cb; })
       });
       this.store.addMultipleIfNeeded([ { path: 'xxx', targets: [ 'xx' ] }]);
@@ -115,13 +116,13 @@ describe('watcher store', function() {
 
     it('should trigger close on watcher', function() {
       let spy = jasmine.createSpy();
-      spyOn(chokidar, 'watch').andReturn({
+      spyOn(chokidar, 'watch').and.returnValue({
         on: function() {},
         close: spy
       });
       this.store.addMultipleIfNeeded([ { path: 'xxx', targets: [ 'xx' ] }]);
       this.store.unwatch('xxx');
-      assert(spy.wasCalled);
+      expect(spy).toHaveBeenCalled();
     });
   });
 
@@ -134,18 +135,18 @@ describe('watcher store', function() {
 
     it('should trigger close on watcher', function() {
       let spy = jasmine.createSpy();
-      spyOn(chokidar, 'watch').andReturn({
+      spyOn(chokidar, 'watch').and.returnValue({
         on: function() {},
         close: spy
       });
-      this.store.addMultipleIfNeeded([ { path: 'xxx', targets: [ 'xx' ] }]);
-      this.store.multipleUnwatch(['xxx']);
-      assert(spy.wasCalled);
+      this.store.addMultipleIfNeeded([ { path: 'new-xx', targets: [ 'xx' ] }]);
+      this.store.multipleUnwatch(['new-xx']);
+      expect(spy).toHaveBeenCalled();
     });
 
     it('should remove all dependencies in the list', function() {
       let spy = jasmine.createSpy();
-      spyOn(chokidar, 'watch').andReturn({
+      spyOn(chokidar, 'watch').and.returnValue({
         on: function() {},
         close: spy
       });

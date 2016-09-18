@@ -3,6 +3,7 @@
 const assert       = require('assert');
 const dTree        = require('dependency-tree');
 
+jest.enableAutomock();
 jest.dontMock('../dependency-store');
 jest.dontMock('../../models/dependency');
 jest.dontMock('../../lib/get-excluded');
@@ -23,7 +24,7 @@ function createMockHub () {
 }
 
 function nthCall(nr, mock) {
-  return mock.argsForCall[nr];
+  return mock.calls.argsFor(nr);
 }
 
 describe('dependency-store', function() {

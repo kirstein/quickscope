@@ -60,7 +60,7 @@ class DependenciesStore {
     const cwd = dependency.cwd;
     // Go through dependency targets to see if those targets
     // have dropped any of their dependencies
-    return _.reduce(dependency.targets, function (result, target) {
+    return _.reduce(dependency.targets, (result, target) => {
       // Update dependency list for the target itself
       let deps = parseDependencies({ cwd  : cwd, path : target });
       // Get the list of dropped dependencies.
@@ -70,7 +70,7 @@ class DependenciesStore {
       // All deps are the same
       if (!excluded.length) { return result; }
       return _.union(result, _.filter(excluded, this._isOrphan, this));
-    }, [], this);
+    }, []);
   }
 
   _killOrphans (orphans) {
@@ -86,7 +86,7 @@ class DependenciesStore {
     this._cache[target] = _.without(dependencies, target);
     // Flip the dependency list
     // from target: [ dependency... ] to dependency: [ target ]
-    return _.map(dependencies, function (dep) {
+    return _.map(dependencies, (dep) => {
       // Write the dependency to the list
       deps[dep] = deps[dep] || new Dependency(dep, cwd);
       deps[dep].addTarget(target);
@@ -115,9 +115,7 @@ class DependenciesStore {
   removeDependency (dep) {
     if (!dep) { throw new Error('No dependency defined'); }
     if (dep.isTarget()) { return; }
-    let deps = _.map(dep.targets, function (target) {
-      return this._dependencies[target];
-    }, this);
+    let deps = _.map(dep.targets, (target) => this._dependencies[target]);
     this._hub.emit(constants.deps.MULTIPLE_DENENDENCY_DIRTY, deps);
   }
 
@@ -125,21 +123,21 @@ class DependenciesStore {
     if (!dep) { throw new Error('No dependency defined'); }
     let deps = parseDependencies(dep);
     this._killOrphans(this._findOrphans(dep)); // Die bastards. Die
-    let modifiedDeps = _.reduce(dep.targets, function (res, target) {
+    let modifiedDeps = _.reduce(dep.targets, (res, target) => {
       return _.union(res, this._buildDependencyList(deps, target, dep.cwd));
-    }, [], this);
+    }, []);
     this._hub.emit(constants.deps.MULTIPLE_DEPENDENCY_CHANGED, modifiedDeps);
   }
 
   removeTarget(path) {
     if (!path) { throw new Error('No target defined'); }
     let hasRemoved = false;
-    _.each(this._dependencies, function (val, key) {
+    _.each(this._dependencies, (val, key) => {
       if (key === path || val.removeTarget(path)) {
         hasRemoved = true;
         this._deleteDependency(key);
       }
-    }, this);
+    });
     if (hasRemoved) {
       this._hub.emit(constants.deps.DEPENDENCY_UNWATCH, path);
     }

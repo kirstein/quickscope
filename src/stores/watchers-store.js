@@ -10,12 +10,8 @@ const constants = {
 
 function buildWatcher (hub, dependency) {
   let watcher = chokidar.watch(dependency.path);
-  watcher.on('change', function () {
-    hub.emit(constants.watcher.DEPENDENCY_FILE_CHANGED, dependency);
-  });
-  watcher.on('unlink', function () {
-    hub.emit(constants.watcher.DEPENDENCY_FILE_UNLINK, dependency);
-  });
+  watcher.on('change', () => hub.emit(constants.watcher.DEPENDENCY_FILE_CHANGED, dependency));
+  watcher.on('unlink', () => hub.emit(constants.watcher.DEPENDENCY_FILE_UNLINK, dependency));
   return watcher;
 }
 
@@ -38,29 +34,31 @@ class DependenciesStore {
   }
 
   multipleUnwatch (deps) {
-    _.each(deps, this.unwatch, this);
+    _.each(deps, (dep) => this.unwatch(dep));
   }
 
   unwatch (path) {
+    console.log('unwatching', path);
     let dep = this._data[path];
-    // Seems that we do not have a target to unwatch. Oh well.
+    console.log(this._data);
+    // Seems that we do not have a target to unwatch
     if (!dep) { return; }
+    console.log('triggering close');
     dep.watcher.close();
     delete this._data[path];
   }
 
   addMultipleIfNeeded (deps) {
-    _.each(deps, function (dependency) {
+    console.log('asd', this._data);
+    _.each(deps, (dependency) => {
       let path = dependency.path;
       // That path is already added.
-      if (this._data[path]) {
-        return;
-      }
+      if (this._data[path]) return;
       this._data[path] = {
         dependency: dependency,
         watcher: buildWatcher(this._hub, dependency)
       };
-    }, this);
+    });
   }
 }
 
