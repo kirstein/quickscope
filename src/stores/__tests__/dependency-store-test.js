@@ -79,6 +79,17 @@ describe('dependency-store', function() {
       expect(args.filename).toEqual(`${__dirname}/xxx`);
     });
 
+    it('should not break paths if given full ones', function() {
+      dTree.toList.and.callFake(() => ['one', 'two']);
+      this.store.addTarget({
+        cwd: __dirname,
+        path: `${__dirname}/kala`
+      });
+      const args = dTree.toList.calls.argsFor(0)[0];
+      expect(args.directory).toEqual(__dirname);
+      expect(args.filename).toEqual(`${__dirname}/kala`);
+    });
+
     it('should add deps to deps', function() {
       dTree.toList.and.callFake(() => ['one', 'two']);
       this.store.addTarget({
