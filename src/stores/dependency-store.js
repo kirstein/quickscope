@@ -5,7 +5,6 @@ const dTree = require('dependency-tree');
 const path  = require('path');
 
 const Dependency  = require('../models/dependency');
-const getExcluded = require('../lib/get-excluded');
 
 const constants  = {
   deps    : require('../constants/dependency-constants'),
@@ -36,6 +35,10 @@ function parseDependencies (payload) {
 
 function getFullPath (payload) {
   return path.join(payload.cwd, payload.path);
+}
+
+function getExcluded (arr1, arr2) {
+  return _.difference(arr1, arr2);
 }
 
 class DependenciesStore {
@@ -114,8 +117,8 @@ class DependenciesStore {
   }
 
   removeDependency (dep) {
-    if (!dep) { throw new Error('No dependency defined'); }
-    if (dep.isTarget()) { return; }
+    if (!dep) throw new Error('No dependency defined');
+    if (dep.isTarget()) return;
     let deps = _.map(dep.targets, (target) => this._dependencies[target]);
     this._hub.emit(constants.deps.MULTIPLE_DENENDENCY_DIRTY, deps);
   }

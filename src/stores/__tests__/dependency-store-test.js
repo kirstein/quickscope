@@ -5,7 +5,6 @@ const assert = require('assert');
 jest.enableAutomock();
 jest.dontMock('../dependency-store');
 jest.dontMock('../../models/dependency');
-jest.dontMock('../../lib/get-excluded');
 jest.dontMock('lodash');
 
 const dTree = require('dependency-tree');
