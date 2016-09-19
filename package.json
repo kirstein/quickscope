@@ -4,7 +4,8 @@
   "description": "Quickly react to dependecy changes",
   "scripts": {
     "test": "jest",
-    "watch": "quickscope"
+    "watch": "quickscope",
+    "lint": "eslint ."
   },
   "repository": {
     "type": "git",
@@ -12,6 +13,8 @@
   },
   "main": "./quickscope",
   "devDependencies": {
+    "@testlio/eslint-config-services": "^1.1.0",
+    "eslint": "^3.5.0",
     "jest-cli": "^15.1.1"
   },
   "license": "MIT",
@@ -26,7 +29,10 @@
   },
   "config": {
     "quickscope": {
-      "files": ["(stores|models)/__tests__/**/**.js", "__tests__/**/**.js"],
+      "files": [
+        "(stores|models)/__tests__/**/**.js",
+        "__tests__/**/**.js"
+      ],
       "cmd": "node node_modules/jest-cli/bin/jest.js"
     }
   }
