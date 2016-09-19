@@ -26,7 +26,7 @@
   },
   "config": {
     "quickscope": {
-      "files": "src/**/__tests__/**/**.js",
+      "files": "(stores|models)**/__tests__/**/**.js",
       "cmd": "jest"
     }
   }
