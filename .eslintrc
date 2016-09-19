@@ -1,0 +1,36 @@
+{
+    "extends": "@testlio/eslint-config-services",
+    "globals": {
+        "jest": true,
+        "jasmine": true,
+        "it": true,
+        "describe": true,
+        "spyOn": true,
+        "beforeEach": true,
+        "expect": true
+    },
+    "rules": {
+        "require-jsdoc": [
+            "error",
+            {
+                "require": {
+                    "ClassDeclaration": false,
+                    "FunctionDeclaration": true,
+                    "MethodDefinition": true
+                }
+            }
+        ],
+        "valid-jsdoc": [
+            "error",
+            {
+                "preferType": {
+                    "Boolean": "boolean",
+                    "Number": "number",
+                    "String": "string"
+                },
+                "requireReturnDescription": false,
+                "requireReturn": false
+            }
+        ]
+    }
+}
