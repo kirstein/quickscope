@@ -1,9 +1,9 @@
 'use strict';
 
-exports.on = function () {};
-exports.watch = function () {
-  return {
-    on: function() {},
-    close: function () {}
-  };
+exports.on = function() {};
+exports.watch = function() {
+    return {
+        on: function() {},
+        close: function() {}
+    };
 };
