@@ -75,10 +75,9 @@ describe('dependency-store', function() {
         cwd: __dirname,
         path: 'xxx'
       });
-      expect(dTree.toList.calls.argsFor(0)[0]).toEqual({
-        directory: __dirname,
-        filename: `${__dirname}/xxx`
-      });
+      const args = dTree.toList.calls.argsFor(0)[0];
+      expect(args.directory).toEqual(__dirname);
+      expect(args.filename).toEqual(`${__dirname}/xxx`);
     });
 
     it('should add deps to deps', function() {
