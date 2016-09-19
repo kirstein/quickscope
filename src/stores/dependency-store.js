@@ -28,8 +28,8 @@ const constants  = {
 // e - [ Y ]
 function parseDependencies (payload) {
   return dTree.toList({
-    filename: payload.path,
-    root: payload.cwd
+    directory: payload.cwd,
+    filename: path.join(payload.cwd, payload.path),
   });
 }
 
@@ -69,13 +69,13 @@ class DependenciesStore {
       this._cache[target] = deps;
       // All deps are the same
       if (!excluded.length) { return result; }
-      return _.union(result, _.filter(excluded, this._isOrphan, this));
+      return _.union(result, _.filter(excluded, (res) => this._isOrphan(res)));
     }, []);
   }
 
   _killOrphans (orphans) {
     if (orphans.length) {
-      _.each(orphans, this._deleteDependency, this);
+      _.each(orphans, (orphan) => this._deleteDependency(orphan));
       this._hub.emit(constants.deps.MULTIPLE_DEPENDENCY_UNWATCH, orphans);
     }
   }
@@ -105,7 +105,7 @@ class DependenciesStore {
   }
 
   addTarget (target) {
-    if (!target) { throw new Error('No target defined'); }
+    if (!target) throw new Error('No target defined');
     let path         = getFullPath(target);
     let deps         = parseDependencies(target);
     let dependencies = this._buildDependencyList(deps, path, target.cwd);

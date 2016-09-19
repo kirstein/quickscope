@@ -1,7 +1,6 @@
 'use strict';
 
-const assert       = require('assert');
-const dTree        = require('dependency-tree');
+const assert = require('assert');
 
 jest.enableAutomock();
 jest.dontMock('../dependency-store');
@@ -9,11 +8,13 @@ jest.dontMock('../../models/dependency');
 jest.dontMock('../../lib/get-excluded');
 jest.dontMock('lodash');
 
+const dTree = require('dependency-tree');
 const DependenciesStore = require('../dependency-store');
+
 const constants = {
   watcher : require('../../constants/watcher-constants'),
-  target  : require('../../constants/target-constants'),
-  deps    : require('../../constants/dependency-constants')
+  target : require('../../constants/target-constants'),
+  deps : require('../../constants/dependency-constants')
 };
 
 function createMockHub () {
@@ -29,7 +30,7 @@ function nthCall(nr, mock) {
 
 describe('dependency-store', function() {
   beforeEach(function() {
-    dTree._mockDeps = [];
+    dTree.toList = jasmine.createSpy();
     this.hub   = createMockHub();
     this.store = new DependenciesStore(this.hub);
   });
@@ -68,8 +69,20 @@ describe('dependency-store', function() {
       }.bind(this), /target defined/);
     });
 
+    it('should pass paths to toList', function() {
+      dTree.toList.and.callFake(() => ['one', 'two']);
+      this.store.addTarget({
+        cwd: __dirname,
+        path: 'xxx'
+      });
+      expect(dTree.toList.calls.argsFor(0)[0]).toEqual({
+        directory: __dirname,
+        filename: `${__dirname}/xxx`
+      });
+    });
+
     it('should add deps to deps', function() {
-      dTree._mockDeps = [ 'one', 'two' ];
+      dTree.toList.and.callFake(() => ['one', 'two']);
       this.store.addTarget({
         cwd: __dirname,
         path: 'xxx'
@@ -80,7 +93,7 @@ describe('dependency-store', function() {
     });
 
     it('should add target locations to deps', function() {
-      dTree._mockDeps = [ 'one', 'two' ];
+      dTree.toList.and.callFake(() => ['one', 'two']);
       this.store.addTarget({
         cwd: __dirname,
         path: 'one'
@@ -90,7 +103,7 @@ describe('dependency-store', function() {
     });
 
     it('should target multiple target locations to one dep', function() {
-      dTree._mockDeps = [ 'one' ];
+      dTree.toList.and.callFake(() => ['one']);
       this.store.addTarget({
         cwd: 'loc2',
         path: 'xxx'
@@ -104,12 +117,11 @@ describe('dependency-store', function() {
     });
 
     it('should trigger dependency added event', function() {
-      dTree._mockDeps = [ 'one' ];
+      dTree.toList.and.callFake(() => ['one']);
       this.store.addTarget({
         cwd: 'loc2',
         path: 'xxx'
       });
-
       assert.strictEqual(nthCall(0, this.hub.emit)[0], constants.deps.MULTIPLE_DEPENDENCY_ADDED);
     });
   });
@@ -123,12 +135,12 @@ describe('dependency-store', function() {
     });
 
     it('should add changed target locations to deps', function() {
-      dTree._mockDeps = [ 'add' ];
+      dTree.toList.and.callFake(() => ['one']);
       this.store.addTarget({
         cwd: __dirname,
         path: 'zzz'
       });
-      dTree._mockDeps = [ 'add', 'change' ];
+      dTree.toList.and.callFake(() => ['add', 'change']);
       this.store.changeDependency({
         cwd: __dirname,
         path: 'zzz',
@@ -141,12 +153,12 @@ describe('dependency-store', function() {
     });
 
     it('should trigger dependency change event', function() {
-      dTree._mockDeps = [ 'one' ];
+      dTree.toList.and.callFake(() => ['one']);
       this.store.addTarget({
         cwd: __dirname,
         path: 'xx',
       });
-      dTree._mockDeps = [ 'one', 'two' ];
+      dTree.toList.and.callFake(() => ['one', 'two']);
       this.store.changeDependency({
         cwd: __dirname,
         path: 'xx',
@@ -156,12 +168,12 @@ describe('dependency-store', function() {
     });
 
     it('should pass the change dependencies as event payload', function() {
-      dTree._mockDeps = [ 'one' ];
+      dTree.toList.and.callFake(() => ['one']);
       this.store.addTarget({
         cwd: __dirname,
         path: 'xx',
       });
-      dTree._mockDeps = [ 'one', 'two' ];
+      dTree.toList.and.callFake(() => ['one', 'two']);
       this.store.changeDependency({
         cwd: __dirname,
         path: 'xx',
@@ -172,12 +184,12 @@ describe('dependency-store', function() {
 
     describe('killing orphans', function() {
       it('should remove dependencies that have no dependency link to target', function() {
-        dTree._mockDeps = [ 'add' ];
+        dTree.toList.and.callFake(() => ['add']);
         this.store.addTarget({
           cwd: __dirname,
           path: 'zzz'
         });
-        dTree._mockDeps = [ 'change' ];
+        dTree.toList.and.callFake(() => ['change']);
         this.store.changeDependency({
           cwd: __dirname,
           path: 'xxx',
@@ -186,20 +198,20 @@ describe('dependency-store', function() {
         assert(!this.store.getDependencies().change);
       });
 
-      xit('should remove dependencies subtrees that arent linked to target', function() {
-        dTree._mockDeps = [ 'linked' ];
+      it('should remove dependencies subtrees that arent linked to target', function() {
+        dTree.toList.and.callFake(() => ['linked']);
         this.store.addTarget({
           cwd: __dirname,
           path: 'zzz'
         });
-        dTree._mockDeps = [ 'linked', 'one', 'two' ];
+        dTree.toList.and.callFake(() => ['linked', 'one', 'two']);
         this.store.changeDependency({
           cwd: __dirname,
           path: 'xxx',
           targets: [ __dirname + '/zzz' ]
         });
         assert(this.store.getDependencies().linked);
-        dTree._mockDeps = [ 'two' ];
+        dTree.toList.and.callFake(() => ['two']);
         this.store.changeDependency({
           cwd: __dirname,
           path: 'xxx',
@@ -210,7 +222,7 @@ describe('dependency-store', function() {
       });
 
       it('should not remove dependency if its used by two targets and one drops it', function() {
-        dTree._mockDeps = [ 'notDropped' ];
+        dTree.toList.and.callFake(() => ['notDropped']);
         this.store.addTarget({
           cwd: __dirname,
           path: 'zzz'
@@ -219,7 +231,7 @@ describe('dependency-store', function() {
           cwd: __dirname,
           path: 'xxx',
         });
-        dTree._mockDeps = [ ];
+        dTree.toList.and.callFake(() => []);
         this.store.changeDependency({
           cwd: __dirname,
           path: 'xxx',
@@ -229,12 +241,12 @@ describe('dependency-store', function() {
       });
 
       it('should trigger unwatch event if there are orphans', function() {
-        dTree._mockDeps = [ 'add' ];
+        dTree.toList.and.callFake(() => ['add']);
         this.store.addTarget({
           cwd: __dirname,
           path: 'zzz'
         });
-        dTree._mockDeps = [ ];
+        dTree.toList.and.callFake(() => []);
         this.store.changeDependency({
           cwd: __dirname,
           path: 'xxx',
@@ -244,12 +256,12 @@ describe('dependency-store', function() {
       });
 
       it('should add dependencies as payload', function() {
-        dTree._mockDeps = [ 'add' ];
+        dTree.toList.and.callFake(() => ['add']);
         this.store.addTarget({
           cwd: __dirname,
           path: 'zzz'
         });
-        dTree._mockDeps = [ ];
+        dTree.toList.and.callFake(() => []);
         this.store.changeDependency({
           cwd: __dirname,
           path: 'xxx',
@@ -258,62 +270,62 @@ describe('dependency-store', function() {
         assert.strictEqual(nthCall(1, this.hub.emit)[1][0], 'add');
       });
     });
-  });
 
-  describe('remove target', function() {
-    it('should throw if no payload is added', function() {
-      assert.throws(function() {
-        this.store.removeTarget();
-      }.bind(this), /No target/);
-    });
-
-    it('should go through dependency list and remove itself from all dependencies', function() {
-      dTree._mockDeps = [ 'add' ];
-      this.store.addTarget({
-        path: 'xxx',
-        cwd: __dirname
+    describe('remove target', function() {
+      it('should throw if no payload is added', function() {
+        assert.throws(function() {
+          this.store.removeTarget();
+        }.bind(this), /No target/);
       });
-      this.store.removeTarget('xxx');
-      assert(!this.store.getDependencies().xxx);
-    });
 
-    it('should trigger dependencys removed event', function() {
-      dTree._mockDeps = [ 'xxx' ];
-      this.store.addTarget({
-        cwd: __dirname,
-        path: 'xxx'
+      it('should go through dependency list and remove itself from all dependencies', function() {
+        dTree.toList.and.callFake(() => ['add']);
+        this.store.addTarget({
+          path: 'xxx',
+          cwd: __dirname
+        });
+        this.store.removeTarget('xxx');
+        assert(!this.store.getDependencies().xxx);
       });
-      this.store.removeTarget('xxx');
-      assert.strictEqual(nthCall(1, this.hub.emit)[0], constants.deps.DEPENDENCY_UNWATCH);
-    });
 
-    it('shouldnt trigger removed event if no dependencys were removed', function() {
-      dTree._mockDeps = [ 'not-included' ];
-      this.store.addTarget({
-        cwd: __dirname,
-        path: 'xxx'
+      it('should trigger dependencys removed event', function() {
+        dTree.toList.and.callFake(() => ['xxx']);
+        this.store.addTarget({
+          cwd: __dirname,
+          path: 'xxx'
+        });
+        this.store.removeTarget('xxx');
+        assert.strictEqual(nthCall(1, this.hub.emit)[0], constants.deps.DEPENDENCY_UNWATCH);
       });
-      this.store.removeTarget('xxx');
-      assert(!this.hub.emit.calls[1]);
-    });
-  });
 
-  describe('remove depdency', function() {
-    it('should throw if no payload is added', function() {
-      assert.throws(function() {
-        this.store.removeDependency();
-      }.bind(this), /dependency/);
-    });
-
-    it('should trigger multiple dependency dirty event', function() {
-      let targetPath = __dirname + '/xxx';
-      dTree._mockDeps = [ targetPath, 'kala' ];
-      this.store.addTarget({
-        cwd: __dirname,
-        path: 'xxx'
+      it('shouldnt trigger removed event if no dependencys were removed', function() {
+        dTree.toList.and.callFake(() => ['not-included']);
+        this.store.addTarget({
+          cwd: __dirname,
+          path: 'xxx'
+        });
+        this.store.removeTarget('xxx');
+        assert(!this.hub.emit.calls[1]);
       });
-      this.store.removeDependency(this.store.getDependencies().kala);
-      assert.strictEqual(nthCall(1, this.hub.emit)[0], constants.deps.MULTIPLE_DENENDENCY_DIRTY);
+
+      describe('remove depdency', function() {
+        it('should throw if no payload is added', function() {
+          assert.throws(function() {
+            this.store.removeDependency();
+          }.bind(this), /dependency/);
+        });
+
+        it('should trigger multiple dependency dirty event', function() {
+          let targetPath = __dirname + '/xxx';
+          dTree.toList.and.callFake(() => [ targetPath, 'kala' ]);
+          this.store.addTarget({
+            cwd: __dirname,
+            path: 'xxx'
+          });
+          this.store.removeDependency(this.store.getDependencies().kala);
+          assert.strictEqual(nthCall(1, this.hub.emit)[0], constants.deps.MULTIPLE_DENENDENCY_DIRTY);
+        });
+      });
     });
   });
 });

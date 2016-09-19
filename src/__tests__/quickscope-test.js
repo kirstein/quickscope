@@ -2,6 +2,7 @@
 
 const assert = require('assert');
 
+jest.enableAutomock();
 jest.dontMock('../quickscope');
 jest.dontMock('lodash');
 
@@ -17,7 +18,7 @@ const constants  = {
 };
 
 function nthCall(nr, mock) {
-  return mock.argsForCall[nr];
+  return mock.calls.argsFor(nr);
 }
 
 function createMockHub () {
@@ -28,7 +29,7 @@ function createMockHub () {
 }
 describe('Quickscope', function() {
   beforeEach(function() {
-    spyOn(chokidar, 'watch').andCallFake(function() {
+    spyOn(chokidar, 'watch').and.callFake(function() {
       return {
         on: function (evt, cb) {
           if (evt === 'add') { this.addCb = cb; }
@@ -36,7 +37,7 @@ describe('Quickscope', function() {
         }.bind(this)
       };
     }.bind(this));
-    spyOn(events, 'EventEmitter').andCallFake(function () {
+    spyOn(events, 'EventEmitter').and.callFake(function () {
       this.hub = createMockHub();
       return this.hub;
     }.bind(this));
@@ -184,7 +185,7 @@ describe('Quickscope', function() {
       let spy = jasmine.createSpy();
       this.qs.on(constants.quickscope.QUICKSCOPE_DEP_CHANGE, spy);
       this.qs.changeDependency(dependency);
-      assert(spy.wasCalled);
+      expect(spy).toHaveBeenCalled();
     });
 
     it('should emit target change event', function() {

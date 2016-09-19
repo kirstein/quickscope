@@ -2,6 +2,7 @@
 
 const assert = require('assert');
 
+jest.enableAutomock();
 jest.dontMock('../get-excluded');
 jest.dontMock('lodash');
 

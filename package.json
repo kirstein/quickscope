@@ -3,7 +3,7 @@
   "version": "0.2.1",
   "description": "Quickly react to dependecy changes",
   "scripts": {
-    "test": "./node_modules/jest-cli/bin/jest.js",
+    "test": "jest",
     "watch": "quickscope"
   },
   "repository": {
