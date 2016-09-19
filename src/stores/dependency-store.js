@@ -29,7 +29,7 @@ function parseDependencies (payload) {
   return dTree.toList({
     directory: payload.cwd,
     filter: path => path.indexOf('node_modules') === -1,
-    filename: path.join(payload.cwd, payload.path),
+    filename: path.resolve(payload.cwd, payload.path)
   });
 }
 
