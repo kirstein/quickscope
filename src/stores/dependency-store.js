@@ -109,7 +109,6 @@ class DependenciesStore {
     if (!target) throw new Error('No target defined');
     let path         = getFullPath(target);
     let deps         = parseDependencies(target);
-    console.log(deps);
     let dependencies = this._buildDependencyList(deps, path, target.cwd);
     this._hub.emit(constants.deps.MULTIPLE_DEPENDENCY_ADDED, dependencies);
   }
