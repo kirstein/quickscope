@@ -29,6 +29,7 @@ const constants  = {
 function parseDependencies (payload) {
   return dTree.toList({
     directory: payload.cwd,
+    filter: path => path.indexOf('node_modules') === -1,
     filename: path.join(payload.cwd, payload.path),
   });
 }
@@ -108,6 +109,7 @@ class DependenciesStore {
     if (!target) throw new Error('No target defined');
     let path         = getFullPath(target);
     let deps         = parseDependencies(target);
+    console.log(deps);
     let dependencies = this._buildDependencyList(deps, path, target.cwd);
     this._hub.emit(constants.deps.MULTIPLE_DEPENDENCY_ADDED, dependencies);
   }
