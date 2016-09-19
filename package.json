@@ -10,7 +10,7 @@
     "type": "git",
     "url": "git@github.com:kirstein/quickscope.git"
   },
-  "main": "./src/quickscope",
+  "main": "./quickscope",
   "devDependencies": {
     "jest-cli": "^15.1.1"
   },
