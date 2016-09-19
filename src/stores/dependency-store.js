@@ -121,7 +121,7 @@ class DependenciesStore {
   }
 
   changeDependency (dep) {
-    if (!dep) { throw new Error('No dependency defined'); }
+    if (!dep) throw new Error('No dependency defined');
     let deps = parseDependencies(dep);
     this._killOrphans(this._findOrphans(dep)); // Die bastards. Die
     let modifiedDeps = _.reduce(dep.targets, (res, target) => {
@@ -131,15 +131,16 @@ class DependenciesStore {
   }
 
   removeTarget(path) {
-    if (!path) { throw new Error('No target defined'); }
+    if (!path) throw new Error('No target defined');
     let hasRemoved = false;
-    _.each(this._dependencies, (val, key) => {
+    const removed = _.reduce(this._dependencies, (carry, val, key) => {
       if (key === path || val.removeTarget(path)) {
-        hasRemoved = true;
         this._deleteDependency(key);
+        carry.push(key);
       }
-    });
-    if (hasRemoved) {
+      return carry;
+    }, []);
+    if (removed.length) {
       this._hub.emit(constants.deps.DEPENDENCY_UNWATCH, path);
     }
   }
