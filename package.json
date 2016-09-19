@@ -26,8 +26,8 @@
   },
   "config": {
     "quickscope": {
-      "files": "(stores|models)**/__tests__/**/**.js",
-      "cmd": "jest"
+      "files": ["(stores|models)/__tests__/**/**.js", "__tests__/**/**.js"],
+      "cmd": "node node_modules/jest-cli/bin/jest.js"
     }
   }
 }
