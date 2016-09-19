@@ -3,41 +3,55 @@
 const _ = require('lodash');
 
 class Dependency {
-  constructor(path, cwd) {
-    if (!path) {
-      throw new Error('No dependency path defined');
+    /**
+     * @param {string} path path of the dependency
+     * @param {string} cwd project cwd where the given dependency lives
+     */
+    constructor(path, cwd) {
+        if (!path) throw new Error('No dependency path defined');
+        if (!cwd) throw new Error('No cwd defined');
+        this.cwd = cwd;
+        this.path = path;
+        this.targets = [];
     }
-    if (!cwd) {
-      throw new Error('No cwd defined');
+
+    /**
+     * @param {string} target add new target to the given dependency
+     */
+    addTarget(target) {
+        if (this.hasTarget(target)) return;
+        if (this.isTarget()) throw new Error('Dependency is already a target. Target can have only one target.');
+        this.targets.push(target);
     }
-    this.cwd     = cwd;
-    this.path    = path;
-    this.targets = [];
-  }
 
-  addTarget(target) {
-    if (this.hasTarget(target)) { return; }
-    else if (this.isTarget()) {
-      throw new Error('Dependency is already a target. Target can have only one target.');
+    /**
+     * @param {string} target remove target from dependency
+     * @return {boolean} true
+     */
+    removeTarget(target) {
+        if (!this.hasTarget(target)) return false;
+        this.targets = _.without(this.targets, target);
+        return true;
     }
-    this.targets.push(target);
-  }
 
-  removeTarget(target) {
-    if (!this.hasTarget(target)) {
-      return false;
+    /**
+     * Checks if the given dependency has a target or not
+     *
+     * @param {string} target target to search
+     * @return {boolean} true if target exists, otherwise false
+     */
+    hasTarget(target) {
+        return _.includes(this.targets, target);
     }
-    this.targets = _.without(this.targets, target);
-    return true;
-  }
 
-  hasTarget(target) {
-    return _.includes(this.targets, target);
-  }
-
-  isTarget() {
-    return this.path === _.first(this.targets);
-  }
+    /**
+     * Checks if we are dealing with a target
+     *
+     * @return {boolean} true if we are dealing with a target, otherwise false
+     */
+    isTarget() {
+        return this.path === _.first(this.targets);
+    }
 }
 
 module.exports = Dependency;
