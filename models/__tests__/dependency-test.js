@@ -5,6 +5,7 @@ const assert = require('assert');
 jest.enableAutomock();
 jest.dontMock('../dependency');
 jest.dontMock('lodash');
+jest.dontMock('debug');
 
 const Dependency = require('../dependency');
 

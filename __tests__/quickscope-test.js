@@ -5,6 +5,7 @@ const assert = require('assert');
 jest.enableAutomock();
 jest.dontMock('../quickscope');
 jest.dontMock('lodash');
+jest.dontMock('debug');
 
 const Quickscope = require('../quickscope');
 const Dependency = require('../models/dependency');

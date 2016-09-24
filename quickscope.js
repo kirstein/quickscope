@@ -4,6 +4,7 @@ const events = require('events');
 const path = require('path');
 const _ = require('lodash');
 const chokidar = require('chokidar');
+const debug = require('debug')('quickscope:main');
 
 const constants = {
     watcher: require('./constants/watcher-constants'),
@@ -28,6 +29,7 @@ const DEFAULT_OPTS = {
  * @return {Watcher}
  */
 function buildWatcher(glob, opts) {
+    debug('Building watcher glob: %s, opts: %o', glob, opts);
     return chokidar.watch(glob, opts);
 }
 
@@ -38,7 +40,8 @@ class Quickscope extends events.EventEmitter {
      * @param {object} opts additional params
      */
     constructor(glob, opts) {
-        if (!glob) { throw new Error('No glob defined'); }
+        if (!glob) throw new Error('No glob defined');
+        debug('Initializing quickscope');
         opts = _.assign({}, DEFAULT_OPTS, opts);
         super();
         this.cwd = opts.cwd;
@@ -95,6 +98,7 @@ class Quickscope extends events.EventEmitter {
      * @param {string} target target to add
      */
     addTarget(target) {
+        debug('Adding target: %s', target);
         if (!target) throw new Error('No target defined');
         this._targets.push(target);
         this._hub.emit(constants.target.TARGET_ADDED, {
@@ -111,6 +115,7 @@ class Quickscope extends events.EventEmitter {
      * @param {string} target target to unlink
      */
     unlinkTarget(target) {
+        debug('Unlinking target: %s', target);
         if (!target) throw new Error('No target defined');
         this._targets = _.without(this._targets, target);
         this._hub.emit(constants.target.TARGET_REMOVED, path.join(this.cwd, target));
@@ -123,6 +128,7 @@ class Quickscope extends events.EventEmitter {
      * @param {Dependency} dep target dependency
      */
     changeDependency(dep) {
+        debug('Changing dependency %o', dep);
         if (!dep) throw new Error('Dependency not defined');
         this.emit(constants.quickscope.QUICKSCOPE_DEP_CHANGE, [].concat(dep));
     }

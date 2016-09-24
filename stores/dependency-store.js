@@ -3,6 +3,7 @@
 const _ = require('lodash');
 const dTree = require('dependency-tree');
 const path = require('path');
+const debug = require('debug')('quickscope:dependency-store');
 
 const Dependency = require('../models/dependency');
 
@@ -21,11 +22,14 @@ const constants = {
  * @return {Array.<Array.<string>>} dependency tree
  */
 function findDependencyList(payload) {
-    return dTree.toList({
+    debug('Finding dependencies for path: %o', payload);
+    const deps = dTree.toList({
         directory: payload.cwd,
         filter: loc => loc.indexOf('node_modules') === -1,
         filename: path.resolve(payload.cwd, payload.path)
     });
+    debug('Found deps: %o', deps);
+    return deps;
 }
 
 class DependenciesStore {
@@ -33,6 +37,7 @@ class DependenciesStore {
      * @param {Hub} hub target hub to trigger events on
      */
     constructor(hub) {
+        debug('Initializing dependencies store %o', hub);
         this._hub = hub;
         this._dependencies = {};
         this._cache = {};
@@ -68,6 +73,7 @@ class DependenciesStore {
      * @return {Array.<string>} orphan dependency paths
      */
     _findOrphans(dependency) {
+        debug('Finding orphans for %o', dependency);
         const cwd = dependency.cwd;
         // Go through dependency targets to see if those targets
         // have dropped any of their dependencies
@@ -89,6 +95,7 @@ class DependenciesStore {
      * @param {Array.<string>} orphans orphan dependency paths
      */
     _killOrphans(orphans) {
+        debug('Killing orphans %o', orphans);
         if (orphans.length) {
             _.each(orphans, (orphan) => this._deleteDependency(orphan));
             this._hub.emit(constants.deps.MULTIPLE_DEPENDENCY_UNWATCH, orphans);
@@ -104,6 +111,7 @@ class DependenciesStore {
      * @return {Array.<Dependency>} list of dependencies
      */
     _buildDependencyList(dependencies, target, cwd) {
+        debug('Building dependencies list %o', dependencies, target, cwd);
         const deps = this._dependencies;
         // Cache the target deps. Make sure we exclude ourselves from that
         this._cache[target] = _.without(dependencies, target);
@@ -142,6 +150,7 @@ class DependenciesStore {
      * @param {string} target.path targets file path
      */
     addTarget(target) {
+        debug('Adding target %s', target);
         if (!target) throw new Error('No target defined');
         const fullPath = path.join(target.cwd, target.path);
         const deps = findDependencyList(target);
@@ -153,6 +162,7 @@ class DependenciesStore {
      * @param {Dependency} dep dependency to remove
      */
     removeDependency(dep) {
+        debug('Removing dependency %o', dep);
         if (!dep) throw new Error('No dependency defined');
         if (dep.isTarget()) return;
         const deps = _.map(dep.targets, (target) => this._dependencies[target]);
@@ -163,6 +173,7 @@ class DependenciesStore {
      * @param {Dependency} dep dependency to change
      */
     changeDependency(dep) {
+        debug('Changing dependency %o', dep);
         if (!dep) throw new Error('No dependency defined');
         const deps = findDependencyList(dep);
         this._killOrphans(this._findOrphans(dep)); // Die bastards. Die
@@ -178,6 +189,7 @@ class DependenciesStore {
      * @param {string} fullPath full path of the target
      */
     removeTarget(fullPath) {
+        debug('Removing target %s', fullPath);
         if (!fullPath) throw new Error('No target defined');
         const removed = _.reduce(this._dependencies, (carry, val, key) => {
             if (key === fullPath || val.removeTarget(fullPath)) {

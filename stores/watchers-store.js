@@ -2,6 +2,7 @@
 
 const _ = require('lodash');
 const chokidar = require('chokidar');
+const debug = require('debug')('quickscope:watchers-store');
 
 const constants = {
     deps: require('../constants/dependency-constants'),
@@ -16,6 +17,7 @@ const constants = {
  * @return {Watcher} new build watcher
  */
 function buildWatcher(hub, dependency) {
+    debug('Building watcher for dependency %o', dependency);
     const watcher = chokidar.watch(dependency.path);
     watcher.on('change', () => hub.emit(constants.watcher.DEPENDENCY_FILE_CHANGED, dependency));
     watcher.on('unlink', () => hub.emit(constants.watcher.DEPENDENCY_FILE_UNLINK, dependency));
@@ -27,6 +29,7 @@ class DependenciesStore {
      * @param {Hub} hub target hub to use for event transmitting
      */
     constructor(hub) {
+        debug('Initializing dependency store %o', hub);
         this._hub = hub;
         this._data = {};
         this._registerEvents();
@@ -43,7 +46,7 @@ class DependenciesStore {
     }
 
     /**
-     * Retuns all watchers
+     * Returns all watchers
      *
      * @return {Array.<Watcher>} watchers
      */
@@ -57,6 +60,7 @@ class DependenciesStore {
      * @param {Array.<Dependency>} deps deps to unwatch
      */
     multipleUnwatch(deps) {
+        debug('Unwatching multiple deps: %o', deps);
         _.each(deps, (dep) => this.unwatch(dep));
     }
 
@@ -67,9 +71,9 @@ class DependenciesStore {
      * @param {string} path watcher path
      */
     unwatch(path) {
+        debug('Unwatching dep: %o', path);
         const dep = this._data[path];
-        // Seems that we do not have a target to unwatch
-        if (!dep) { return; }
+        if (!dep) return;
         dep.watcher.close();
         delete this._data[path];
     }
@@ -82,6 +86,7 @@ class DependenciesStore {
      * @param {Array.<Dependency>} deps dependencies to add
      */
     addMultipleIfNeeded(deps) {
+        debug('Adding multiple deps: %o', deps);
         _.each(deps, (dependency) => {
             const path = dependency.path;
             // That path is already added.

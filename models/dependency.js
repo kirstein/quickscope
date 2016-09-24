@@ -1,6 +1,7 @@
 'use strict';
 
 const _ = require('lodash');
+const debug = require('debug')('quickscope:dependency');
 
 class Dependency {
     /**
@@ -8,6 +9,7 @@ class Dependency {
      * @param {string} cwd project cwd where the given dependency lives
      */
     constructor(path, cwd) {
+        debug('Initializing path: %s cwd: %s', path, cwd);
         if (!path) throw new Error('No dependency path defined');
         if (!cwd) throw new Error('No cwd defined');
         this.cwd = cwd;
@@ -19,6 +21,7 @@ class Dependency {
      * @param {string} target add new target to the given dependency
      */
     addTarget(target) {
+        debug('Adding target: %s', target);
         if (this.hasTarget(target)) return;
         if (this.isTarget()) throw new Error('Dependency is already a target. Target can have only one target.');
         this.targets.push(target);
@@ -29,6 +32,7 @@ class Dependency {
      * @return {boolean} true
      */
     removeTarget(target) {
+        debug('Removing target: %s', target);
         if (!this.hasTarget(target)) return false;
         this.targets = _.without(this.targets, target);
         return true;

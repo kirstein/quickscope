@@ -7,6 +7,7 @@ jest.enableAutomock();
 jest.dontMock('../dependency-store');
 jest.dontMock('../../models/dependency');
 jest.dontMock('lodash');
+jest.dontMock('debug');
 
 const dTree = require('dependency-tree');
 const DependenciesStore = require('../dependency-store');

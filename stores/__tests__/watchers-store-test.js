@@ -5,6 +5,7 @@ const assert = require('assert');
 jest.enableAutomock();
 jest.dontMock('../watchers-store');
 jest.dontMock('lodash');
+jest.dontMock('debug');
 
 const WatchersStore = require('../watchers-store');
 const chokidar = require('chokidar');
