@@ -1,6 +1,6 @@
 {
   "name": "quickscope",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Quickly react to dependecy changes",
   "scripts": {
     "test": "jest",
